@@ -102,13 +102,15 @@ bool dax::testing::ArgumentsParser::parseArguments(int argc, char* argv[])
       {
       this->Pipeline = THRESHOLD;
       }
-    if (pipelineflag == MARCHING_CUBES)
+    else if (pipelineflag == MARCHING_CUBES)
       {
       this->Pipeline = MARCHING_CUBES;
       }
     else
       {
-      std::cerr << "Incorrect pipeline choice" << std::endl;
+      std::cerr << "Incorrect pipeline choice: " << pipelineflag << std::endl;
+      std::cerr << "Threshold is : " << THRESHOLD  << std::endl;
+      std::cerr << "Marching Cubes is : " << MARCHING_CUBES  << std::endl;
       }
     }
 
