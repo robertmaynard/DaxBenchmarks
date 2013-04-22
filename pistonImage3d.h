@@ -5,7 +5,7 @@
 
 #ifdef PISTON_ENABLED
 #include <piston/image3d.h>
-#endif PISTON_ENABLED
+#endif
 
 struct piston_scalar_image3d : piston::image3d<thrust::device_system_tag>
 {

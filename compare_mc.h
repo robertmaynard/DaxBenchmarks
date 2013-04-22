@@ -20,7 +20,7 @@
 #ifdef PISTON_ENABLED
 #include "pistonImage3d.h"
 #include <piston/marching_cube.h>
-#endif PISTON_ENABLED
+#endif
 
 #include <vector>
 
@@ -146,5 +146,5 @@ static void RunPistonMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer
     double time = timer.GetElapsedTime();
     std::cout << "Piston," << device << "," << time << "," << i << std::endl;
     }
-#endif PISTON_ENABLED
+#endif
 }
