@@ -56,10 +56,6 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
 {
   dax::cont::UniformGrid<> grid;
   grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
-  dax::cont::ArrayHandle<dax::Scalar> field = dax::cont::make_ArrayHandle(buffer);
-
-  // Make sure data is in execution environment before starting timer.
-  field.PrepareForInput();
 
   typedef dax::cont::GenerateInterpolatedCells<dax::worklet::MarchingCubesTopology> GenerateIC;
   typedef GenerateIC::ClassifyResultType  ClassifyResultType;
@@ -71,6 +67,8 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
   for(int i=0; i < MAX_NUM_TRIALS; ++i)
     {
     dax::cont::Timer<> timer;
+
+    dax::cont::ArrayHandle<dax::Scalar> field = dax::cont::make_ArrayHandle(buffer);
 
     //construct the two worklets that will be used to do the marching cubes
     dax::worklet::MarchingCubesClassify classifyWorklet(ISO_VALUE);
@@ -137,14 +135,13 @@ static void RunPistonMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer
   typedef piston::marching_cube< piston_scalar_image3d,
                                  piston_scalar_image3d > MC;
 
-  piston_scalar_image3d pimage(dims[0],dims[1],dims[2],buffer);
-
   for (int i=0; i < MAX_NUM_TRIALS; ++i)
     {
+    dax::cont::Timer<> timer;
+    piston_scalar_image3d pimage(dims[0],dims[1],dims[2],buffer);
     //piston moves memory when constructing the marching cubes object
     MC marching(pimage,pimage,ISO_VALUE);
 
-    dax::cont::Timer<> timer;
     marching();
     double time = timer.GetElapsedTime();
     std::cout << "Piston," << device << "," << time << "," << i << std::endl;

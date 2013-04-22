@@ -36,21 +36,17 @@ static void RunDaxThreshold(int dims[3], std::vector<dax::Scalar>& buffer,
 {
   dax::cont::UniformGrid<> grid;
   grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
-  dax::cont::ArrayHandle<dax::Scalar> field = dax::cont::make_ArrayHandle(buffer);
-
-  // Make sure data is in execution environment before starting timer.
-  field.PrepareForInput();
 
   typedef dax::cont::GenerateTopology<dax::worklet::ThresholdTopology> GenerateT;
   typedef GenerateT::ClassifyResultType  ClassifyResultType;
 
   //construct the scheduler that will execute all the worklets
   dax::cont::Scheduler<> scheduler;
-
-
   for(int i=0; i < MAX_NUM_TRIALS; ++i)
     {
     dax::cont::Timer<> timer;
+
+    dax::cont::ArrayHandle<dax::Scalar> field = dax::cont::make_ArrayHandle(buffer);
 
     //construct the two worklets that will be used to do the marching cubes
     dax::worklet::ThresholdClassify<dax::Scalar> classifyWorklet(MIN_VALUE,MAX_VALUE);
@@ -107,13 +103,15 @@ static void RunPistonThreshold(int dims[3], std::vector<dax::Scalar>& buffer,
 {
 #ifdef PISTON_ENABLED
   typedef piston::threshold_geometry< piston_scalar_image3d > TG;
-  piston_scalar_image3d pimage(dims[0],dims[1],dims[2],buffer);
+
   for (int i=0; i < MAX_NUM_TRIALS; ++i)
     {
     //piston moves memory when constructing the marching cubes object
+    dax::cont::Timer<> timer;
+    piston_scalar_image3d pimage(dims[0],dims[1],dims[2],buffer);
     TG threshold(pimage,MIN_VALUE, MAX_VALUE);
 
-    dax::cont::Timer<> timer;
+
     threshold();
     double time = timer.GetElapsedTime();
     std::cout << "Piston," << device << "," << time << "," << i << std::endl;

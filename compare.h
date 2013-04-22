@@ -55,7 +55,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
 {
 
   std::vector<dax::Scalar> buffer;
-  double resample_ratio = 0.4; //full data
+  double resample_ratio = 0.6; //full data
   vtkSmartPointer< vtkImageData > image = ReadData(buffer, file, resample_ratio);
 
   //get dims of image data
@@ -73,7 +73,6 @@ int RunComparison(std::string device, std::string file, int pipeline)
 
     //print out header of csv
     std::cout << "Benchmarking Threshold" << std::endl;
-
 
     std::cout << "DaxNoResolution,Accelerator,Time,Trial" << std::endl;
     RunDaxThreshold(dims,buffer,device,NUM_TRIALS,!WithPointResolution);
