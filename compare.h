@@ -55,7 +55,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
 {
 
   std::vector<dax::Scalar> buffer;
-  double resample_ratio = 1.0; //full data
+  double resample_ratio = 0.4; //full data
   vtkSmartPointer< vtkImageData > image = ReadData(buffer, file, resample_ratio);
 
   //get dims of image data
@@ -64,10 +64,17 @@ int RunComparison(std::string device, std::string file, int pipeline)
   //pipeline 1 is equal to threshold
   if(pipeline <= 1)
   {
+    const bool WithPointResolution=true;
+
+    std::cout << "Warming up the machine" << std::endl;
+    //warm up the card, whatever algorithm we run first will get a performance
+    //hit for the first 10 iterations if we don't run something first
+    RunDaxThreshold(dims,buffer,device,NUM_TRIALS,!WithPointResolution,true);
+
     //print out header of csv
     std::cout << "Benchmarking Threshold" << std::endl;
 
-    bool WithPointResolution=true;
+
     std::cout << "DaxNoResolution,Accelerator,Time,Trial" << std::endl;
     RunDaxThreshold(dims,buffer,device,NUM_TRIALS,!WithPointResolution);
 
@@ -86,9 +93,14 @@ int RunComparison(std::string device, std::string file, int pipeline)
   else //marching cubes
   {
 
-    std::cout << "Benchmarking Marching Cubes" << std::endl;
+    const bool WithPointResolution=true;
 
-    bool WithPointResolution=true;
+    std::cout << "Warming up the machine" << std::endl;
+    //warm up the card, whatever algorithm we run first will get a performance
+    //hit for the first 10 iterations if we don't run something first
+    RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,!WithPointResolution,true);
+
+    std::cout << "Benchmarking Marching Cubes" << std::endl;
 
     std::cout << "DaxNoResolution,Accelerator,Time,Trial" << std::endl;
     RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,!WithPointResolution);

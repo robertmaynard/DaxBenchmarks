@@ -31,7 +31,8 @@ static const dax::Scalar MAX_VALUE=1.0;
 
 static void RunDaxThreshold(int dims[3], std::vector<dax::Scalar>& buffer,
                                 std::string device, int MAX_NUM_TRIALS,
-                                bool enablePointResolution)
+                                bool enablePointResolution,
+                                bool silent=false)
 {
   dax::cont::UniformGrid<> grid;
   grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
@@ -70,7 +71,8 @@ static void RunDaxThreshold(int dims[3], std::vector<dax::Scalar>& buffer,
     scheduler.Invoke(generate, grid, outGrid);
 
     double time = timer.GetElapsedTime();
-    std::cout << "Dax," << device << "," << time << "," << i << std::endl;
+    if(!silent)
+      std::cout << "Dax," << device << "," << time << "," << i << std::endl;
     }
 }
 
@@ -112,6 +114,7 @@ static void RunPistonThreshold(vtkImageData* image, std::string device, int MAX_
 
     dax::cont::Timer<> timer;
     threshold();
+    double time = timer.GetElapsedTime();
     std::cout << "Piston," << device << "," << time << "," << i << std::endl;
     }
 #endif PISTON_ENABLED

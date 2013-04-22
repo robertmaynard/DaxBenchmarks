@@ -17,12 +17,12 @@
 #include <vtkSmartPointer.h>
 #include <vtkTrivialProducer.h>
 
-#ifdef PISTON_ENABLED
+//#ifdef PISTON_ENABLED
 
 #include <piston/vtk_image3d.h>
 #include <piston/marching_cube.h>
 
-#endif PISTON_ENABLED
+// /#endif PISTON_ENABLED
 
 #include <vector>
 
@@ -53,7 +53,8 @@ dax::Vector3 operator()(const dax::exec::CellField<
 
 static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
                                 std::string device, int MAX_NUM_TRIALS,
-                                bool enablePointResolution)
+                                bool enablePointResolution,
+                                bool silent=false)
 {
   dax::cont::UniformGrid<> grid;
   grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
@@ -98,7 +99,8 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
     scheduler.Invoke(normWorklet, outGrid, outGrid.GetPointCoordinates(), normals);
 
     double time = timer.GetElapsedTime();
-    std::cout << "Dax," << device << "," << time << "," << i << std::endl;
+    if(!silent)
+      std::cout << "Dax," << device << "," << time << "," << i << std::endl;
     }
 }
 
@@ -133,7 +135,8 @@ static void RunVTKMarchingCubes(vtkImageData* image, int MAX_NUM_TRIALS)
 static void RunPistonMarchingCubes(vtkImageData* image, std::string device, int MAX_NUM_TRIALS)
 {
 #ifdef PISTON_ENABLED
-  typedef piston::marching_cube<piston::vtk_image3d<>,piston::vtk_image3d< ::thrust::device_system_tag > > MC;
+  typedef piston::marching_cube< piston::vtk_image3d< ::thrust::device_system_tag >,
+                                 piston::vtk_image3d< ::thrust::device_system_tag > > MC;
 
   piston::vtk_image3d< ::thrust::device_system_tag > pimage(image);
 
@@ -144,6 +147,7 @@ static void RunPistonMarchingCubes(vtkImageData* image, std::string device, int 
 
     dax::cont::Timer<> timer;
     marching();
+    double time = timer.GetElapsedTime();
     std::cout << "Piston," << device << "," << time << "," << i << std::endl;
     }
 #endif PISTON_ENABLED

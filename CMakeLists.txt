@@ -38,6 +38,19 @@ set(srcs
   ArgumentsParser.cxx
   )
 
+option(ENABLE_PISTON "Benchmark piston comparison" OFF)
+if(${ENABLE_PISTON})
+
+ find_path( PISTON_INCLUDE
+    NAMES piston/piston_math.h
+    DOC "Piston headers"
+    )
+ include_directories(${PISTON_INCLUDE})
+ add_definitions("-DPISTON_ENABLED")
+
+endif()
+
+
 add_executable(BenchmarkSerial
   ${srcs}
   mainSerial.cxx
@@ -90,15 +103,3 @@ target_link_libraries(BenchmarkCuda
   vtkIOImage
   vtkIOLegacy
   )
-
-option(ENABLE_PISTON "Benchmark piston comparison" OFF)
-if(${ENABLE_PISTON})
-
- find_path( PISTON_INCLUDE
-    NAMES piston/piston_math.h
-    DOC "Piston headers"
-    )
- include_directories(${PISTON_INCLUDE})
- add_definitions("-DPISTON_ENABLED")
-
-endif()
