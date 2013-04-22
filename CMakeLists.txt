@@ -51,6 +51,14 @@ if(${ENABLE_PISTON})
 endif()
 
 
+#-----------------------------------------------------------------------------
+# setup timing libs we need to link too
+set(DAX_TIMING_LIBS)
+if(UNIX AND NOT APPLE)
+  set(DAX_TIMING_LIBS rt)
+endif()
+
+
 add_executable(BenchmarkSerial
   ${srcs}
   mainSerial.cxx
@@ -75,6 +83,7 @@ add_executable(BenchmarkTBB
   )
 
 target_link_libraries(BenchmarkTBB
+  ${DAX_TIMING_LIBS}
   vtkCommonCore
   vtkCommonDataModel
   vtkCommonExecutionModel
