@@ -18,7 +18,7 @@
 #include <vtkTrivialProducer.h>
 
 #ifdef PISTON_ENABLED
-#include <piston/vtk_image3d.h>
+#include "pistonImage3d.h"
 #include "piston-threshold_geometry.h"
 #endif PISTON_ENABLED
 
@@ -102,11 +102,12 @@ static void RunVTKThreshold(vtkImageData* image, int MAX_NUM_TRIALS)
 }
 
 
-static void RunPistonThreshold(vtkImageData* image, std::string device, int MAX_NUM_TRIALS)
+static void RunPistonThreshold(int dims[3], std::vector<dax::Scalar>& buffer,
+                               std::string device, int MAX_NUM_TRIALS)
 {
 #ifdef PISTON_ENABLED
-  typedef piston::threshold_geometry<piston::vtk_image3d< ::thrust::device_system_tag > > TG;
-  piston::vtk_image3d< ::thrust::device_system_tag > pimage(image);
+  typedef piston::threshold_geometry< piston_scalar_image3d > TG;
+  piston_scalar_image3d pimage(dims[0],dims[1],dims[2],buffer);
   for (int i=0; i < MAX_NUM_TRIALS; ++i)
     {
     //piston moves memory when constructing the marching cubes object

@@ -82,7 +82,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
     RunDaxThreshold(dims,buffer,device,NUM_TRIALS, WithPointResolution);
 
     std::cout << "Piston,Accelerator,Time,Trial" << std::endl;
-    RunPistonThreshold(image,device,NUM_TRIALS);
+    RunPistonThreshold(dims,buffer,device,NUM_TRIALS);
 
     if(device == "Serial")
       {
@@ -109,7 +109,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
     RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS, WithPointResolution);
 
     std::cout << "Piston,Accelerator,Time,Trial" << std::endl;
-    RunPistonMarchingCubes(image,device,NUM_TRIALS);
+    RunPistonMarchingCubes(dims,buffer,device,NUM_TRIALS);
 
     if(device == "Serial")
       {

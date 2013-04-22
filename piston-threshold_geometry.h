@@ -156,11 +156,11 @@ struct threshold_geometry
 	                    CountingIterator(0), CountingIterator(0)+num_valid_cells,
 	                    valid_cell_indices.begin());
 
-    // calculate how many neighbors of a cell are valid.
-    num_valid_cell_neighbors.resize(num_valid_cells);
-    thrust::transform(valid_cell_indices.begin(), valid_cell_indices.end(),
-                      num_valid_cell_neighbors.begin(),
-                      valid_cell_neighbors(input, thrust::raw_pointer_cast(&*valid_cell_flags.begin())));
+    // // calculate how many neighbors of a cell are valid.
+    // num_valid_cell_neighbors.resize(num_valid_cells);
+    // thrust::transform(valid_cell_indices.begin(), valid_cell_indices.end(),
+    //                   num_valid_cell_neighbors.begin(),
+    //                   valid_cell_neighbors(input, thrust::raw_pointer_cast(&*valid_cell_flags.begin())));
 
     // test if a cell is at the exterior of the blob of valid cells.
 //    exterior_cell_flags.resize(num_valid_cells);

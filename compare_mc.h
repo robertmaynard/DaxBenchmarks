@@ -17,12 +17,10 @@
 #include <vtkSmartPointer.h>
 #include <vtkTrivialProducer.h>
 
-//#ifdef PISTON_ENABLED
-
-#include <piston/vtk_image3d.h>
+#ifdef PISTON_ENABLED
+#include "pistonImage3d.h"
 #include <piston/marching_cube.h>
-
-// /#endif PISTON_ENABLED
+#endif PISTON_ENABLED
 
 #include <vector>
 
@@ -132,13 +130,14 @@ static void RunVTKMarchingCubes(vtkImageData* image, int MAX_NUM_TRIALS)
 }
 
 
-static void RunPistonMarchingCubes(vtkImageData* image, std::string device, int MAX_NUM_TRIALS)
+static void RunPistonMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
+                                   std::string device, int MAX_NUM_TRIALS)
 {
 #ifdef PISTON_ENABLED
-  typedef piston::marching_cube< piston::vtk_image3d< ::thrust::device_system_tag >,
-                                 piston::vtk_image3d< ::thrust::device_system_tag > > MC;
+  typedef piston::marching_cube< piston_scalar_image3d,
+                                 piston_scalar_image3d > MC;
 
-  piston::vtk_image3d< ::thrust::device_system_tag > pimage(image);
+  piston_scalar_image3d pimage(dims[0],dims[1],dims[2],buffer);
 
   for (int i=0; i < MAX_NUM_TRIALS; ++i)
     {
