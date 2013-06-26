@@ -57,7 +57,7 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
   dax::cont::UniformGrid<> grid;
   grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
 
-  typedef dax::cont::GenerateInterpolatedCells<dax::worklet::MarchingCubesTopology> GenerateIC;
+  typedef dax::cont::GenerateInterpolatedCells<dax::worklet::MarchingCubesGenerate> GenerateIC;
   typedef GenerateIC::ClassifyResultType  ClassifyResultType;
 
   //construct the scheduler that will execute all the worklets
@@ -72,7 +72,7 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
 
     //construct the two worklets that will be used to do the marching cubes
     dax::worklet::MarchingCubesClassify classifyWorklet(ISO_VALUE);
-    dax::worklet::MarchingCubesTopology generateWorklet(ISO_VALUE);
+    dax::worklet::MarchingCubesGenerate generateWorklet(ISO_VALUE);
     dax::worklet::Normals normWorklet;
 
     //run the first step
