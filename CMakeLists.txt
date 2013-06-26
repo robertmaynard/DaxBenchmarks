@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${mccompare_SOURCE_DIR})
 add_definitions(-DNDEBUG)
 
 find_package(Dax REQUIRED)
-find_package(VTK 6.0
+find_package(VTK 6.1
   COMPONENTS
   vtkCommonCore
   vtkCommonDataModel
