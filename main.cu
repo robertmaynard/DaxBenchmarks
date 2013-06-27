@@ -18,7 +18,6 @@
 #define DAX_DEVICE_ADAPTER DAX_DEVICE_ADAPTER_CUDA
 #define BOOST_SP_DISABLE_THREADS
 
-#include <thrust/iterator/detail/device_system_tag.h>
 #include "ArgumentsParser.h"
 #include "compare.h"
 

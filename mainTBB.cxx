@@ -19,7 +19,6 @@
 #define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_TBB
 #define DAX_DEVICE_ADAPTER DAX_DEVICE_ADAPTER_TBB
 
-#include <thrust/iterator/detail/device_system_tag.h>
 #include "ArgumentsParser.h"
 #include "compare.h"
 

@@ -75,7 +75,7 @@ target_link_libraries(BenchmarkSerial
   vtkIOLegacy
   )
 
-if(DAX_TBB_FOUND)
+if(Dax_TBB_FOUND)
   #Add TBB version
   add_executable(BenchmarkTBB
     ${srcs}
