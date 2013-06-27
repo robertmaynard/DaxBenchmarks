@@ -21,9 +21,8 @@ find_package(VTK 6.1
   REQUIRED)
 
 DaxConfigureSerial(REQUIRED)
-DaxConfigureOpenMP(REQUIRED)
-DaxConfigureTBB(REQUIRED)
-DaxConfigureCuda(REQUIRED)
+DaxConfigureTBB()
+DaxConfigureCuda()
 
 include(${VTK_USE_FILE})
 
@@ -76,39 +75,43 @@ target_link_libraries(BenchmarkSerial
   vtkIOLegacy
   )
 
-#Add TBB version
-add_executable(BenchmarkTBB
-  ${srcs}
-  mainTBB.cxx
-  )
+if(DAX_TBB_FOUND)
+  #Add TBB version
+  add_executable(BenchmarkTBB
+    ${srcs}
+    mainTBB.cxx
+    )
 
-target_link_libraries(BenchmarkTBB
-  ${DAX_TIMING_LIBS}
-  vtkCommonCore
-  vtkCommonDataModel
-  vtkCommonExecutionModel
-  vtkCommonMisc
-  vtkFiltersCore
-  vtkFiltersGeometry
-  vtkImagingCore
-  vtkIOImage
-  vtkIOLegacy
-  )
+  target_link_libraries(BenchmarkTBB
+    ${DAX_TIMING_LIBS}
+    vtkCommonCore
+    vtkCommonDataModel
+    vtkCommonExecutionModel
+    vtkCommonMisc
+    vtkFiltersCore
+    vtkFiltersGeometry
+    vtkImagingCore
+    vtkIOImage
+    vtkIOLegacy
+    )
+endif()
 
-#Add CUDA version
-cuda_add_executable(BenchmarkCuda
-  ${srcs}
-  main.cu
-  )
+if(Dax_Cuda_FOUND)
+  #Add CUDA version
+  cuda_add_executable(BenchmarkCuda
+    ${srcs}
+    main.cu
+    )
 
-target_link_libraries(BenchmarkCuda
-  vtkCommonCore
-  vtkCommonDataModel
-  vtkCommonExecutionModel
-  vtkCommonMisc
-  vtkFiltersCore
-  vtkFiltersGeometry
-  vtkImagingCore
-  vtkIOImage
-  vtkIOLegacy
-  )
+  target_link_libraries(BenchmarkCuda
+    vtkCommonCore
+    vtkCommonDataModel
+    vtkCommonExecutionModel
+    vtkCommonMisc
+    vtkFiltersCore
+    vtkFiltersGeometry
+    vtkImagingCore
+    vtkIOImage
+    vtkIOLegacy
+    )
+endif()
