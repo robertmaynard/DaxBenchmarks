@@ -13,7 +13,10 @@
 #include <iostream>
 #include <vector>
 
-static const int NUM_TRIALS = 20;
+#include "SharedStatus.h"
+#include "tlog/tlog.h"
+
+static const int NUM_TRIALS = 5;
 
 static vtkSmartPointer<vtkImageData>
 ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSize=1.0)
@@ -53,6 +56,10 @@ ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSiz
 
 int RunComparison(std::string device, std::string file, int pipeline)
 {
+  // Jimmy added
+  SharedStatus::init();
+  tlog = new TLog();
+  tlog->regThread("Main");
 
   std::vector<dax::Scalar> buffer;
   double resample_ratio = 1; //full data
@@ -101,6 +108,10 @@ int RunComparison(std::string device, std::string file, int pipeline)
 
     std::cout << "Benchmarking Marching Cubes" << std::endl;
 
+    // Jimmy added
+    std::cout << "VTKDax,Accelerator,Time,Trial" << std::endl;
+    RunVTKDaxMarchingCubes(device, image, NUM_TRIALS);
+
     std::cout << "DaxNoResolution,Accelerator,Time,Trial" << std::endl;
     RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,!WithPointResolution);
 
@@ -112,9 +123,14 @@ int RunComparison(std::string device, std::string file, int pipeline)
 
     if(device == "Serial")
       {
+      std::cout << "Serial,Accelerator,Time,Trial" << std::endl;
       RunVTKMarchingCubes(image,NUM_TRIALS);
       }
   }
+
+  // Jimmy
+  delete tlog;
+  SharedStatus::getInstance()->print();
 
   return 0;
 }

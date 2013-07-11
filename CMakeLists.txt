@@ -5,6 +5,7 @@ project(mccompare CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${mccompare_SOURCE_DIR})
 
 add_definitions(-DNDEBUG)
+add_definitions(-D_PROFILE)
 
 find_package(Dax REQUIRED)
 find_package(VTK 6.1
@@ -18,6 +19,7 @@ find_package(VTK 6.1
   vtkIOLegacy
   vtkIOImage
   vtkImagingCore
+  vtkAcceleratorsDax # Jimmy added 
   REQUIRED)
 
 DaxConfigureSerial(REQUIRED)
@@ -35,6 +37,10 @@ set(srcs
   compare_mc.h
   compare_thresh.h
   ArgumentsParser.cxx
+  vtkDaxPolyDataNormals.cxx #Jimmy:
+  vtkDaxPolyDataNormals.h
+  SharedStatus.cxx
+  tlog/tlogDefs.cpp
   )
 
 option(ENABLE_PISTON "Benchmark piston comparison" OFF)
@@ -63,7 +69,11 @@ add_executable(BenchmarkSerial
   mainSerial.cxx
   )
 
+
+set_target_properties(BenchmarkSerial PROPERTIES COMPILE_DEFINITIONS "DAX_DEVICE_ADAPTER=DAX_DEVICE_ADAPTER_SERIAL")
+
 target_link_libraries(BenchmarkSerial
+  vtkAcceleratorsDax # Jimmy added  
   vtkCommonCore
   vtkCommonDataModel
   vtkCommonExecutionModel
@@ -82,6 +92,9 @@ if(Dax_TBB_FOUND)
     mainTBB.cxx
     )
 
+  set_target_properties(BenchmarkTBB PROPERTIES COMPILE_DEFINITIONS "DAX_DEVICE_ADAPTER=DAX_DEVICE_ADAPTER_TBB")
+
+
   target_link_libraries(BenchmarkTBB
     ${DAX_TIMING_LIBS}
     vtkCommonCore
@@ -92,7 +105,8 @@ if(Dax_TBB_FOUND)
     vtkFiltersGeometry
     vtkImagingCore
     vtkIOImage
-    vtkIOLegacy
+    	vtkIOLegacy
+    vtkAcceleratorsDax # Jimmy added 
     )
 endif()
 
@@ -102,6 +116,9 @@ if(Dax_Cuda_FOUND)
     ${srcs}
     main.cu
     )
+
+  set_target_properties(BenchmarkCuda PROPERTIES COMPILE_DEFINITIONS "DAX_DEVICE_ADAPTER=DAX_DEVICE_ADAPTER_CUDA")
+
 
   target_link_libraries(BenchmarkCuda
     vtkCommonCore
@@ -113,5 +130,6 @@ if(Dax_Cuda_FOUND)
     vtkImagingCore
     vtkIOImage
     vtkIOLegacy
+    vtkAcceleratorsDax # Jimmy added 
     )
 endif()

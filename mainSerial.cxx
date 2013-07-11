@@ -13,7 +13,6 @@
 //  the U.S. Government retains certain rights in this software.
 //
 //=============================================================================
-
 #define DAX_DEVICE_ADAPTER DAX_DEVICE_ADAPTER_SERIAL
 
 //I can't get piston to run serially, so make sure we don't compile it.
@@ -24,14 +23,18 @@
 #include "ArgumentsParser.h"
 #include "compare.h"
 
+#include <tbb/task_scheduler_init.h>
 
 int main(int argc, char* argv[])
   {
+
   dax::testing::ArgumentsParser parser;
   if (!parser.parseArguments(argc, argv))
     {
     return 1;
     }
+
+  tbb::task_scheduler_init schedulerInit(1);
 
   const std::string file = parser.file();
   const int pipeline = parser.pipeline();

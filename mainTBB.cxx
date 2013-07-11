@@ -25,8 +25,10 @@
 
 #include <tbb/task_scheduler_init.h>
 
+
 int main(int argc, char* argv[])
   {
+
   dax::testing::ArgumentsParser parser;
   if (!parser.parseArguments(argc, argv))
     {
@@ -42,8 +44,10 @@ int main(int argc, char* argv[])
     {
     num_cores = auto_num_cores;
     }
+  printf("num_cores=%d\n", num_cores);
 
   tbb::task_scheduler_init schedulerInit(num_cores);
   RunComparison("TBB", file, pipeline);
+
   return 0;
 }
