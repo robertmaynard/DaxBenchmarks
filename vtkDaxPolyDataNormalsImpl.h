@@ -264,7 +264,7 @@ int vtkDaxPolyDataNormals::RequestInformation(vtkInformation* request,
 {
 	printf("vtkDaxPolyDataNormals::RequestInformation (Time from creation: %lf)\n", this->timer.GetElapsedTime() );
 	Superclass::RequestInformation(request, inputVector, outputVector);
-	return 0;
+	return 1;
 }
 
 // Description:
@@ -276,7 +276,7 @@ int vtkDaxPolyDataNormals::RequestUpdateExtent(vtkInformation* request,
 {
 	printf("vtkDaxPolyDataNormals::RequestUpdateExtent (Time from creation: %lf)\n", this->timer.GetElapsedTime() );
 	Superclass::RequestUpdateExtent(request, inputVector, outputVector);
-	return 0;
+	return 1;
 }
 
 #endif // vtkDaxPolyDataNormalsImpl_H

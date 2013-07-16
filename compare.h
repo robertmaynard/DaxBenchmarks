@@ -17,9 +17,10 @@
 #include "tlog/tlog.h"
 
 static const int NUM_TRIALS = 5;
+static const double RESAMPLE_RATIO = .1;  // Jimmy added
 
 static vtkSmartPointer<vtkImageData>
-ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSize=1.0)
+ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSize=.1) // 1.0
 {
   //make sure we are testing float benchmarks only
   assert(sizeof(float) == sizeof(dax::Scalar));
@@ -62,7 +63,8 @@ int RunComparison(std::string device, std::string file, int pipeline)
   tlog->regThread("Main");
 
   std::vector<dax::Scalar> buffer;
-  double resample_ratio = 1; //full data
+  double resample_ratio = RESAMPLE_RATIO; //full data
+  std::cout << "rasample ratio: " << resample_ratio << std::endl;
   vtkSmartPointer< vtkImageData > image = ReadData(buffer, file, resample_ratio);
 
   //get dims of image data

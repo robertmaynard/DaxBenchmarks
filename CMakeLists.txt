@@ -41,6 +41,7 @@ set(srcs
   compare_thresh.h
   ArgumentsParser.cxx #Jimmy added this line and below:
   vtkDaxPolyDataNormals.h
+  vtkDaxPolyDataNormalsImpl.h
   SharedStatus.cxx
   tlog/tlogDefs.cpp
   )
