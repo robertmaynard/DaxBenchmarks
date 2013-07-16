@@ -17,8 +17,8 @@
 #ifndef vtkDaxPolyDataNormal_H
 #define vtkDaxPolyDataNormal_H
 
-#include <vtkPolyDataNormals.h>
 #include <dax/cont/Timer.h>
+#include <vtkPolyDataNormals.h>
 #include "vtkAcceleratorsDaxModule.h" //required for correct implementation
 
 

@@ -12,6 +12,10 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
+#ifndef vtkDaxPolyDataNormalsImpl_H
+#define vtkDaxPolyDataNormalsImpl_H
+
+#include <iostream>
 #include "vtkCellArray.h"
 #include "vtkCharArray.h"
 #include "vtkDoubleArray.h"
@@ -57,7 +61,6 @@
 
 #include "vtkDaxPolyDataNormals.h"
 
-#include <iostream>
 #include "SharedStatus.h"
 #include "tlog/tlog.h"
 #include "tlog/cp_time.h"
@@ -275,3 +278,5 @@ int vtkDaxPolyDataNormals::RequestUpdateExtent(vtkInformation* request,
 	Superclass::RequestUpdateExtent(request, inputVector, outputVector);
 	return 0;
 }
+
+#endif // vtkDaxPolyDataNormalsImpl_H
