@@ -49,11 +49,11 @@
 #include <dax/cont/ArrayHandle.h>
 #include <dax/cont/UnstructuredGrid.h>
 //#include <Containers.h>
-#include <Accelerators/Dax/vtkToDax/DataSetConverters.h>
-#include <Accelerators/Dax/vtkToDax/DataSetTypeToType.h>
-#include <Accelerators/Dax/vtkToDax/CellTypeToType.h>
-#include <Accelerators/Dax/daxToVtk/DataSetConverters.h>
-#include <Accelerators/Dax/daxToVtk/CellTypeToType.h>
+#include <vtkToDax/DataSetConverters.h>
+#include <vtkToDax/DataSetTypeToType.h>
+#include <vtkToDax/CellTypeToType.h>
+#include <daxToVtk/DataSetConverters.h>
+#include <daxToVtk/CellTypeToType.h>
 
 #include "vtkDaxPolyDataNormals.h"
 
