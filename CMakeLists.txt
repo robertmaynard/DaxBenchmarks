@@ -26,7 +26,7 @@ find_package(VTK 6.1
   REQUIRED)
 
 DaxConfigureSerial(REQUIRED)
-DaxConfigureTBB()
+DaxConfigureTBB(REQUIRED)
 DaxConfigureCuda()
 
 include(${VTK_USE_FILE})
@@ -40,7 +40,7 @@ set(srcs
   compare_mc.h
   compare_thresh.h
   ArgumentsParser.cxx
-  #vtkDaxPolyDataNormals.cxx #Jimmy:
+  vtkDaxPolyDataNormalsImpl.h #Jimmy added this line and below:
   vtkDaxPolyDataNormals.h
   SharedStatus.cxx
   tlog/tlogDefs.cpp

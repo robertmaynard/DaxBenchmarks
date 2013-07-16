@@ -13,4 +13,4 @@
 
 =========================================================================*/
 
-#include "vtkDaxPolyDataNormals.h"
+#include "vtkDaxPolyDataNormalsImpl.h"
