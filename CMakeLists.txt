@@ -40,7 +40,7 @@ set(srcs
   compare_mc.h
   compare_thresh.h
   ArgumentsParser.cxx
-  vtkDaxPolyDataNormals.cxx #Jimmy:
+  #vtkDaxPolyDataNormals.cxx #Jimmy:
   vtkDaxPolyDataNormals.h
   SharedStatus.cxx
   tlog/tlogDefs.cpp
@@ -70,6 +70,7 @@ endif()
 add_executable(BenchmarkSerial
   ${srcs}
   mainSerial.cxx
+  vtkDaxPolyDataNormals.cxx
   )
 
 
@@ -93,6 +94,7 @@ if(Dax_TBB_FOUND)
   add_executable(BenchmarkTBB
     ${srcs}
     mainTBB.cxx
+    vtkDaxPolyDataNormals.cxx
     )
 
   set_target_properties(BenchmarkTBB PROPERTIES COMPILE_DEFINITIONS "DAX_DEVICE_ADAPTER=DAX_DEVICE_ADAPTER_TBB")
@@ -118,6 +120,7 @@ if(Dax_Cuda_FOUND)
   cuda_add_executable(BenchmarkCuda
     ${srcs}
     main.cu
+    vtkDaxPolyDataNormals.cu
     )
 
   set_target_properties(BenchmarkCuda PROPERTIES COMPILE_DEFINITIONS "DAX_DEVICE_ADAPTER=DAX_DEVICE_ADAPTER_CUDA")
