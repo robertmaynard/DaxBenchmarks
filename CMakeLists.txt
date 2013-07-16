@@ -3,9 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 project(mccompare CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${mccompare_SOURCE_DIR})
+option(ENABLE_PROFILING "Enable thread loggging for profiling" OFF)
 
 add_definitions(-DNDEBUG)
-add_definitions(-D_PROFILE)
+if (ENABLE_PROFILING)
+	add_definitions(-D_PROFILE)
+endif ()
 
 find_package(Dax REQUIRED)
 find_package(VTK 6.1

@@ -48,7 +48,7 @@
 #include <dax/cont/Scheduler.h>
 #include <dax/cont/ArrayHandle.h>
 #include <dax/cont/UnstructuredGrid.h>
-#include <Containers.h>
+//#include <Containers.h>
 #include <Accelerators/Dax/vtkToDax/DataSetConverters.h>
 #include <Accelerators/Dax/vtkToDax/DataSetTypeToType.h>
 #include <Accelerators/Dax/vtkToDax/CellTypeToType.h>
@@ -121,8 +121,7 @@ inline typename VTKDataSetType::DaxDataSetType dataSetConverter(
   typedef typename VTKDataSetType::DaxDataSetType DataSet;
   typedef typename VTKDataSetType::CellTypeToType CellTypeToType;
 
-  static const int NUM_POINTS = VTKDataSetType::CellTypeToType::NUM_POINTS;
-printf("NUM_POINTS:%d\n", NUM_POINTS);
+  const int NUM_POINTS = VTKDataSetType::CellTypeToType::NUM_POINTS;
 
   dax::cont::ArrayHandle<dax::Vector3,vtkToDax::vtkPointsContainerTag>
       pointsHandle(vtkToDax::vtkPointsPortal<dax::Vector3>(input->GetPoints(),
