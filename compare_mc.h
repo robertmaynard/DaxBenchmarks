@@ -38,7 +38,7 @@
 #include "tlog/tlog.h"
 #include "tlog/tlogDefs.h"
 
-// #define DEBUG_NORMAL
+#define DEBUG_NORMAL
 
 static const dax::Scalar ISO_VALUE=0.07;
 
@@ -321,7 +321,11 @@ static void RunVTKDaxMarchingCubes(std::string &device, vtkImageData* image, int
 	tlog->startEvent(evt_id, s);
     dax::cont::Timer<> timer, timer_mc;
 
+#ifdef DEBUG_NORMAL
+        cout << "new marching cubes" << endl;
+#endif
 	vtkNew<vtkDaxMarchingCubes> marching;
+	cout << "1" << endl;
     marching->SetInputConnection(producer->GetOutputPort());
 
 
@@ -331,6 +335,7 @@ static void RunVTKDaxMarchingCubes(std::string &device, vtkImageData* image, int
     marching->SetNumberOfContours(1);
     marching->SetValue(0, ISO_VALUE);
 
+	cout << "2" << endl;
 	tlog->startEvent(evtMC);
     marching->Update(); //this calls marching::RequestData
     tlog->endEvent(evtMC);
