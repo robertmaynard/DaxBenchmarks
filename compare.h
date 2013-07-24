@@ -17,7 +17,6 @@
 #include "tlog/tlog.h"
 
 static const int NUM_TRIALS = 5;
-static const double RESAMPLE_RATIO = .1;  // Jimmy added
 
 static vtkSmartPointer<vtkImageData>
 ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSize=.1) // 1.0
@@ -55,7 +54,7 @@ ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSiz
 }
 
 
-int RunComparison(std::string device, std::string file, int pipeline)
+int RunComparison(std::string device, std::string file, int pipeline, double resample_ratio=1.0)
 {
   // Jimmy added
   SharedStatus::init();
@@ -63,8 +62,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
   tlog->regThread("Main");
 
   std::vector<dax::Scalar> buffer;
-  double resample_ratio = RESAMPLE_RATIO; //full data
-  std::cout << "rasample ratio: " << resample_ratio << std::endl;
+  std::cout << "resample ratio: " << resample_ratio << std::endl;
   vtkSmartPointer< vtkImageData > image = ReadData(buffer, file, resample_ratio);
 
   //get dims of image data
@@ -106,7 +104,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
     std::cout << "Warming up the machine" << std::endl;
     //warm up the card, whatever algorithm we run first will get a performance
     //hit for the first 10 iterations if we don't run something first
-    RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,!WithPointResolution,true);
+    RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,WithPointResolution,true);
 
     std::cout << "Benchmarking Marching Cubes" << std::endl;
 

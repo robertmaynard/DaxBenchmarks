@@ -21,7 +21,7 @@
 #include <sstream>
 #include <string>
 
-enum  optionIndex { UNKNOWN, HELP, FILEPATH, PIPELINE, CORES};
+enum  optionIndex { UNKNOWN, HELP, FILEPATH, PIPELINE, CORES, RESAMPLE_RATE};
 const dax::testing::option::Descriptor usage[] =
 {
   {UNKNOWN,   0,"" , ""    ,      dax::testing::option::Arg::None, "USAGE: example [options]\n\n"
@@ -32,6 +32,7 @@ const dax::testing::option::Descriptor usage[] =
   {CORES,  0,"", "cores",        dax::testing::option::Arg::Optional, "  --cores  \t number of cores to use, only valid for TBB." },
   {UNKNOWN,   0,"",  "",         dax::testing::option::Arg::None, "\nExample:\n"
                                                                    " example --file=./test --pipeline=1\n"},
+  {RESAMPLE_RATE, 0, "r", "resample", dax::testing::option::Arg::Optional, "Resample rate"},
   {0,0,0,0,0,0}
 };
 
@@ -40,7 +41,8 @@ const dax::testing::option::Descriptor usage[] =
 dax::testing::ArgumentsParser::ArgumentsParser():
   File(""),
   Pipeline(THRESHOLD),
-  Cores(-1)
+  Cores(-1),
+  ResampleRate(1.0)
 {
 }
 
@@ -113,6 +115,13 @@ bool dax::testing::ArgumentsParser::parseArguments(int argc, char* argv[])
       std::cerr << "Marching Cubes is : " << MARCHING_CUBES  << std::endl;
       }
     }
+
+  if ( options[RESAMPLE_RATE] )
+  {
+	  std::string sarg(options[RESAMPLE_RATE].last()->arg);
+	  std::stringstream argstream(sarg);
+	  argstream >> this->ResampleRate;
+  }
 
   delete[] options;
   delete[] buffer;

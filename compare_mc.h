@@ -314,6 +314,14 @@ static void RunVTKDaxMarchingCubes(std::string &device, vtkImageData* image, int
   int evtMC = tlog->createEventID("Update MC filter", 0, 255, 0);
   int evtNorm = tlog->createEventID("Update Norm filter", 0, 255, 0);
 
+#ifdef DEBUG_NORMAL
+
+  // Count points
+  vtkIdType numPoints = image->GetNumberOfPoints();
+  std::cout << "There are " << numPoints << " points." << std::endl;
+
+#endif
+
   for(int i=0; i < MAX_NUM_TRIALS; ++i)
     {
 	char s[100];

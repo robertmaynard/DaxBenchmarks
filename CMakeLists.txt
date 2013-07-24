@@ -26,7 +26,7 @@ find_package(VTK 6.1
   REQUIRED)
 
 DaxConfigureSerial(REQUIRED)
-DaxConfigureTBB(REQUIRED)
+#DaxConfigureTBB(REQUIRED)
 DaxConfigureCuda()
 
 include(${VTK_USE_FILE})
@@ -67,12 +67,12 @@ if(UNIX AND NOT APPLE)
 endif()
 
 
+if (false)
 add_executable(BenchmarkSerial
   ${srcs}
   mainSerial.cxx
   vtkDaxPolyDataNormals.cxx
   )
-
 
 set_target_properties(BenchmarkSerial PROPERTIES COMPILE_DEFINITIONS "DAX_DEVICE_ADAPTER=DAX_DEVICE_ADAPTER_SERIAL")
 
@@ -88,6 +88,7 @@ target_link_libraries(BenchmarkSerial
   vtkIOImage
   vtkIOLegacy
   )
+endif () #serial
 
 if(Dax_TBB_FOUND)
   #Add TBB version

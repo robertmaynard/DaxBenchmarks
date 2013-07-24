@@ -43,11 +43,15 @@ public:
   int cores() const
     { return this->Cores; }
 
+  double resampleRate() const
+  { return this->ResampleRate; }
+
 
 private:
   std::string File;
   PipelineMode Pipeline;
   int Cores;
+  double ResampleRate;
 
 
 };

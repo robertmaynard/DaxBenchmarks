@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
   printf("num_cores=%d\n", num_cores);
 
   tbb::task_scheduler_init schedulerInit(num_cores);
-  RunComparison("TBB", file, pipeline);
+  const double rate = parser.resampleRate();
+  RunComparison("TBB", file, pipeline, rate);
 
   return 0;
 }
