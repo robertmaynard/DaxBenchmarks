@@ -31,6 +31,34 @@ DaxConfigureCuda()
 
 include(${VTK_USE_FILE})
 
+#
+# tools
+#
+vtk_module_load (vtkIOXML)
+
+add_executable(convertUnstructured 
+	convertUnstructured.cxx)
+target_link_libraries (convertUnstructured
+  vtkCommonCore
+  vtkCommonDataModel
+  vtkCommonExecutionModel
+  vtkCommonMisc
+  vtkFiltersCore
+  vtkFiltersGeometry
+  vtkImagingCore
+  vtkIOImage
+  vtkIOLegacy
+  vtkIOXML
+)
+
+
+#
+# Benchmark
+#
+
+
+if (false) ################ SKIP ###############
+
 set_source_files_properties(compare.h
   PROPERTIES HEADER_FILE_ONLY TRUE
   )
@@ -140,3 +168,7 @@ if(Dax_Cuda_FOUND)
     vtkAcceleratorsDax # Jimmy added 
     )
 endif()
+
+
+
+endif () #-------------------
