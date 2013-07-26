@@ -10,16 +10,19 @@
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 
+#include <vtkUnstructuredGrid.h>
+#include <vtkXMLUnstructuredGridReader.h>
+
 #include <iostream>
 #include <vector>
 
 #include "SharedStatus.h"
 #include "tlog/tlog.h"
 
-static const int NUM_TRIALS = 5;
+static const int NUM_TRIALS = 10;
 
 static vtkSmartPointer<vtkImageData>
-ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSize=.1) // 1.0
+ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSize=1.0)
 {
   //make sure we are testing float benchmarks only
   assert(sizeof(float) == sizeof(dax::Scalar));
@@ -54,6 +57,25 @@ ReadData(std::vector<dax::Scalar> &buffer, std::string file,  double resampleSiz
 }
 
 
+static vtkSmartPointer<vtkUnstructuredGrid>
+ReadData_uGrid(std::string file)
+{
+  //make sure we are testing float benchmarks only
+  assert(sizeof(float) == sizeof(dax::Scalar));
+
+  std::cout << "reading file: " << file << std::endl;
+  vtkNew<vtkXMLUnstructuredGridReader> reader;
+  reader->SetFileName(file.c_str());
+  reader->Update();
+
+  //take ref
+  vtkSmartPointer<vtkUnstructuredGrid> uGrid = reader->GetOutput(0);
+  //std::cout << uGrid->GetPointData() << std::endl;
+
+  return uGrid;
+}
+
+
 int RunComparison(std::string device, std::string file, int pipeline, double resample_ratio=1.0)
 {
   // Jimmy added
@@ -61,16 +83,16 @@ int RunComparison(std::string device, std::string file, int pipeline, double res
   tlog = new TLog();
   tlog->regThread("Main");
 
-  std::vector<dax::Scalar> buffer;
-  std::cout << "resample ratio: " << resample_ratio << std::endl;
-  vtkSmartPointer< vtkImageData > image = ReadData(buffer, file, resample_ratio);
+  vtkSmartPointer< vtkUnstructuredGrid > image = ReadData_uGrid(file);
 
   //get dims of image data
-  int dims[3]; image->GetDimensions(dims);
+  int dims[3];
+  //image->GetDimensions(dims);
 
   //pipeline 1 is equal to threshold
   if(pipeline <= 1)
   {
+#if 0
     const bool WithPointResolution=true;
 
     std::cout << "Warming up the machine" << std::endl;
@@ -95,6 +117,7 @@ int RunComparison(std::string device, std::string file, int pipeline, double res
       std::cout << "VTK,Accelerator,Time,Trial" << std::endl;
       RunVTKThreshold(image,NUM_TRIALS);
       }
+#endif
   }
   else //marching cubes
   {
@@ -104,22 +127,22 @@ int RunComparison(std::string device, std::string file, int pipeline, double res
     std::cout << "Warming up the machine" << std::endl;
     //warm up the card, whatever algorithm we run first will get a performance
     //hit for the first 10 iterations if we don't run something first
-    RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,WithPointResolution,true);
+    RunDaxMarchingCubes(image,device,NUM_TRIALS,WithPointResolution,true);
 
     std::cout << "Benchmarking Marching Cubes" << std::endl;
 
     // Jimmy added
-    std::cout << "VTKDax,Accelerator,Time,Trial" << std::endl;
-    RunVTKDaxMarchingCubes(device, image, NUM_TRIALS);
+    //std::cout << "VTKDax,Accelerator,Time,Trial" << std::endl;
+    //RunVTKDaxMarchingCubes(device, image, NUM_TRIALS);
 
     std::cout << "DaxNoResolution,Accelerator,Time,Trial" << std::endl;
-    RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS,!WithPointResolution);
+    RunDaxMarchingCubes(image,device,NUM_TRIALS,!WithPointResolution);
 
     std::cout << "DaxResolution,Accelerator,Time,Trial" << std::endl;
-    RunDaxMarchingCubes(dims,buffer,device,NUM_TRIALS, WithPointResolution);
+    RunDaxMarchingCubes(image,device,NUM_TRIALS, WithPointResolution);
 
     std::cout << "Piston,Accelerator,Time,Trial" << std::endl;
-    RunPistonMarchingCubes(dims,buffer,device,NUM_TRIALS);
+    //RunPistonMarchingCubes(image,device,NUM_TRIALS);
 
     if(device == "Serial")
       {

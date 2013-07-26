@@ -22,7 +22,8 @@ find_package(VTK 6.1
   vtkIOLegacy
   vtkIOImage
   vtkImagingCore
-  vtkAcceleratorsDax # Jimmy added 
+  vtkAcceleratorsDax # Jimmy added :
+  vtkIOXML
   REQUIRED)
 
 DaxConfigureSerial(REQUIRED)
@@ -57,7 +58,6 @@ target_link_libraries (convertUnstructured
 #
 
 
-if (false) ################ SKIP ###############
 
 set_source_files_properties(compare.h
   PROPERTIES HEADER_FILE_ONLY TRUE
@@ -115,6 +115,7 @@ target_link_libraries(BenchmarkSerial
   vtkImagingCore
   vtkIOImage
   vtkIOLegacy
+  vtkIOXML
   )
 endif () #serial
 
@@ -141,6 +142,7 @@ if(Dax_TBB_FOUND)
     vtkIOImage
     	vtkIOLegacy
     vtkAcceleratorsDax # Jimmy added 
+    vtkIOXML
     )
 endif()
 
@@ -166,9 +168,9 @@ if(Dax_Cuda_FOUND)
     vtkIOImage
     vtkIOLegacy
     vtkAcceleratorsDax # Jimmy added 
+    vtkIOXML
     )
 endif()
 
 
 
-endif () #-------------------

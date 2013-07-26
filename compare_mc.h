@@ -17,6 +17,13 @@
 #include <vtkSmartPointer.h>
 #include <vtkTrivialProducer.h>
 
+#include <vtkToDax/CellTypeToType.h>
+#include <vtkToDax/DataSetTypeToType.h>
+#include <vtkToDax/DataSetConverters.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkHexahedron.h>
+#include <vtkDataArray.h>
+
 #ifdef PISTON_ENABLED
 #include "pistonImage3d.h"
 #include <piston/marching_cube.h>
@@ -170,17 +177,55 @@ bool GetPointNormals(vtkPolyData* polydata)
   return false;
 
 }
+
+
+
+//convert an unstructured grid type
+namespace vtkToDax{
+#if 0
+//template<> struct CellTypeAndDataType<VTK_POLY_DATA,VTK_HEXAHEDRON>{enum{Valid=1};};
+
+template<typename CellTypeToTypeDef> struct DataSetTypeToType<CellTypeToTypeDef,vtkHexahedron>
+{
+  typedef CellTypeToTypeDef CellTypeToType;
+  typedef typename CellTypeToTypeDef::DaxCellType DaxCellType;
+  enum {VTKDataSetType=VTK_UNSTRUCTURED_GRID};
+  enum {Valid=(CellTypeAndDataType<VTK_UNSTRUCTURED_GRID,CellTypeToTypeDef::VTKCellType>::Valid)};
+  typedef dax::cont::UnstructuredGrid<DaxCellType,
+          vtkToDax::vtkTopologyContainerTag<CellTypeToType>,
+          vtkToDax::vtkPointsContainerTag>
+          DaxDataSetType;
+};
+#endif
+} // namespace
+
 ///////////////////////////////////////////////////
 
 
-static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
+static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
                                 std::string device, int MAX_NUM_TRIALS,
                                 bool enablePointResolution,
                                 bool silent=false)
 {
-  dax::cont::UniformGrid<> grid;
-  grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
+	//
+	// convert data to dax
+	//
+	//now set the buffer
+	vtkDataArray *newData = data->GetPointData()->GetArray(0);
+	dax::Scalar* rawBuffer = reinterpret_cast<dax::Scalar*>( newData->GetVoidPointer(0) );
+	std::vector<dax::Scalar> buffer( newData->GetNumberOfTuples() );
+	std::copy(rawBuffer, rawBuffer + newData->GetNumberOfTuples(), buffer.begin() );
 
+	typedef vtkToDax::CellTypeToType<vtkHexahedron> VTKCellTypeStruct;
+	typedef vtkToDax::DataSetTypeToType<VTKCellTypeStruct, vtkUnstructuredGrid> DataSetTypeToTypeStruct;
+	typedef DataSetTypeToTypeStruct::DaxDataSetType InputDataSetType;
+	InputDataSetType topology =
+		  vtkToDax::dataSetConverter(data, DataSetTypeToTypeStruct() );
+
+
+  //
+  // original codes
+  //
   typedef dax::cont::GenerateInterpolatedCells<dax::worklet::MarchingCubesGenerate> GenerateIC;
   typedef GenerateIC::ClassifyResultType  ClassifyResultType;
 
@@ -207,7 +252,7 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
 
 		//run the first step
 		ClassifyResultType classification; //array handle for the first step classification
-		scheduler.Invoke(classifyWorklet, grid, field, classification);
+		scheduler.Invoke(classifyWorklet, topology, field, classification);
 
 		//construct the topology generation worklet
 		GenerateIC generate(classification,generateWorklet);
@@ -217,7 +262,7 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
 		dax::cont::UnstructuredGrid<dax::CellTagTriangle> outGrid;
 
 		//schedule marching cubes worklet generate step, saving
-		scheduler.Invoke(generate, grid, outGrid, field);
+		scheduler.Invoke(generate, topology, outGrid, field);
 
 		//compute the normals of each output triangle
 
@@ -240,8 +285,9 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
     }
 }
 
-static void RunVTKMarchingCubes(vtkImageData* image, int MAX_NUM_TRIALS)
+static void RunVTKMarchingCubes(vtkUnstructuredGrid* image, int MAX_NUM_TRIALS)
 {
+#if 0
   vtkNew<vtkTrivialProducer> producer;
   producer->SetOutput(image);
   producer->Update();
@@ -277,6 +323,7 @@ static void RunVTKMarchingCubes(vtkImageData* image, int MAX_NUM_TRIALS)
 		SharedStatus::getInstance()->vtk_mc_time.push_back(time);
 
     }
+#endif
 }
 
 
@@ -303,8 +350,9 @@ static void RunPistonMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer
 
 
 
-static void RunVTKDaxMarchingCubes(std::string &device, vtkImageData* image, int MAX_NUM_TRIALS)
+static void RunVTKDaxMarchingCubes(std::string &device, vtkUnstructuredGrid* image, int MAX_NUM_TRIALS)
 {
+#if 0
 	bool hasPointNormals;
   vtkNew<vtkTrivialProducer> producer;
   producer->SetOutput(image);
@@ -387,5 +435,7 @@ static void RunVTKDaxMarchingCubes(std::string &device, vtkImageData* image, int
     hasPointNormals = GetPointNormals(polydata);
     std::cout << "vtkDaxPolyDataNormals result has point normals? " << hasPointNormals << std::endl << std::endl;
 #endif
+
     }
+#endif
 }
