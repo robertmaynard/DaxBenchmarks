@@ -149,6 +149,10 @@ int RunComparison(std::string device, std::string file, int pipeline, double res
       std::cout << "Serial,Accelerator,Time,Trial" << std::endl;
       RunVTKMarchingCubes(image,NUM_TRIALS);
       }
+
+    // debug result
+    genVTKDaxMarchingCubes(image);
+
   }
 
   // Jimmy

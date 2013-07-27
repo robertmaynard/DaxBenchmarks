@@ -189,15 +189,15 @@ reorder_zcurve( vtkSmartPointer<vtkUnstructuredGrid> inGrid, vtkSmartPointer<vtk
 	//outHexs->SetNumberOfCells(size1);
 	for (i=0; i<size1; i++)
 	{
-		vtkSmartPointer<vtkHexahedron> outHex = vtkHexahedron::New();
-		vtkSmartPointer<vtkHexahedron> inHex = vtkHexahedron::SafeDownCast( inGrid->GetCell( mappingID1[i] ) );
+		//vtkSmartPointer<vtkHexahedron> outHex = vtkHexahedron::New();
+		vtkSmartPointer<vtkHexahedron> hex = vtkHexahedron::SafeDownCast( inGrid->GetCell( mappingID1[i] ) );
 		for (int j=0; j<8; j++)
 		{
-			outHex->GetPointIds()->SetId( j, mappingPos[ inHex->GetPointId(j) ] );
+			hex->GetPointIds()->SetId( j, mappingPos[ hex->GetPointId(j) ] );
 			//printf("SetId[%d]=mapping[inHex(%d)]\n", j, inHex->GetPointId(j));
 			assert (inHex->GetPointId(j) < size);
 		}
-		outHexs->InsertNextCell(outHex);
+		outHexs->InsertNextCell(hex);
 		//hex->Delete();
 	}
 	outGrid->SetCells(VTK_HEXAHEDRON, outHexs);
@@ -232,19 +232,17 @@ int main(int argc, const char **argv)
 
 	vtkSmartPointer<vtkUnstructuredGrid> uGrid = convertSimple(imageData);
 
+	char s[100];
+	sprintf(s, "%s_r%g.vtu", filename, ratio);
+	writeData(uGrid, s);
+
 	if (use_zcurve) {
 		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder_zcurve(uGrid, imageData);
 
 		char s[100];
 		sprintf(s, "%s_r%gz.vtu", filename, ratio );
 		writeData(uGridr, s);
-	} else
-	{
-		char s[100];
-		sprintf(s, "%s_r%g.vtu", filename, ratio);
-		writeData(uGrid, s);
 	}
-
 
 	return 0;
 }

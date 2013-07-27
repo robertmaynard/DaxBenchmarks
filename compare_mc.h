@@ -37,6 +37,9 @@
 #include <vtkDataSet.h>
 #include <vtkDaxMarchingCubes.h>
 #include "vtkDaxPolyDataNormals.h"
+#include <vtkXMLPolyDataWriter.h> // debug
+#include <daxToVtk/DataSetConverters.h>
+#include <daxToVtk/CellTypeToType.h>
 
 #include <vector>
 #include <string.h>
@@ -272,7 +275,7 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 		double time = timer.GetElapsedTime();
 		tlog->endEvent(evt_id);
 
-		if(!silent)
+		//if(!silent)
 			std::cout << "Dax," << device << "," << time << "," << i << std::endl;
 
 	    // timing
@@ -282,6 +285,7 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 			else
 				SharedStatus::getInstance()->dax_mc_nores_time.push_back(time);
 		}
+
     }
 }
 
@@ -437,5 +441,88 @@ static void RunVTKDaxMarchingCubes(std::string &device, vtkUnstructuredGrid* ima
 #endif
 
     }
+#endif
+}
+
+template <typename T> struct MarchingCubesOuputType
+	{
+  	typedef dax::CellTagTriangle type;
+	};
+// debugging the result
+static void genVTKDaxMarchingCubes(vtkUnstructuredGrid* data)
+{
+#if 0
+	//
+	// convert vtk data to dax
+	//
+	//now set the buffer
+	vtkDataArray *newData = data->GetPointData()->GetArray(0);
+	dax::Scalar* rawBuffer = reinterpret_cast<dax::Scalar*>( newData->GetVoidPointer(0) );
+	std::vector<dax::Scalar> buffer( newData->GetNumberOfTuples() );
+	std::copy(rawBuffer, rawBuffer + newData->GetNumberOfTuples(), buffer.begin() );
+
+	typedef vtkToDax::CellTypeToType<vtkHexahedron> VTKCellTypeStruct;
+	typedef vtkToDax::DataSetTypeToType<VTKCellTypeStruct, vtkUnstructuredGrid> DataSetTypeToTypeStruct;
+	typedef DataSetTypeToTypeStruct::DaxDataSetType InputDataSetType;
+	InputDataSetType topology =
+		  vtkToDax::dataSetConverter(data, DataSetTypeToTypeStruct() );
+
+
+	//
+	// run dax
+	//
+	dax::cont::Scheduler<> scheduler;
+  	typedef dax::cont::GenerateInterpolatedCells<dax::worklet::MarchingCubesGenerate> GenerateIC;
+  	typedef GenerateIC::ClassifyResultType  ClassifyResultType;
+	dax::cont::ArrayHandle<dax::Scalar> field = dax::cont::make_ArrayHandle(buffer);
+
+	//construct the two worklets that will be used to do the marching cubes
+	dax::worklet::MarchingCubesClassify classifyWorklet(ISO_VALUE);
+	dax::worklet::MarchingCubesGenerate generateWorklet(ISO_VALUE);
+	dax::worklet::Normals normWorklet;
+
+	//run the first step
+	ClassifyResultType classification; //array handle for the first step classification
+	scheduler.Invoke(classifyWorklet, topology, field, classification);
+
+	//construct the topology generation worklet
+	GenerateIC generate(classification,generateWorklet);
+	generate.SetRemoveDuplicatePoints(true);
+
+	//run the second step
+    //dax::cont::UnstructuredGrid<dax::CellTagTriangle> outGrid;
+    typedef typename MarchingCubesOuputType< typename VTKCellTypeStruct::DaxCellType >::type OutCellType;
+	dax::cont::UnstructuredGrid<OutCellType,
+                 vtkToDax::vtkTopologyContainerTag<VTKCellType>,
+                 vtkToDax::vtkPointsContainerTag > outGrid;
+
+	//schedule marching cubes worklet generate step, saving
+	scheduler.Invoke(generate, topology, outGrid, field);
+
+	//compute the normals of each output triangle
+
+	dax::cont::ArrayHandle<dax::Vector3, vtkToDax::vtkArrayContainerTag<vtkFloatArray> > normals;
+	scheduler.Invoke(normWorklet, outGrid, outGrid.GetPointCoordinates(), normals);
+
+
+	//
+	// convert to vtk
+	//
+	vtkNew<vtkPolyData> output ;
+
+    daxToVtk::dataSetConverter(outGrid,output.GetPointer());
+
+	//calling GetPortalControl brings memory back from execution to control env
+	//so we should time this too.
+	vtkDataArray *dataArray = normals.GetPortalControl().GetVtkData();
+	dataArray->SetName("Normals");
+	output->GetPointData()->AddArray(dataArray);
+
+	vtkNew<vtkXMLPolyDataWriter> writer;
+    writer->SetInputData(output.GetPointer());
+    writer->SetFileName("out.vtp");
+    writer->Write();
+
+    cout << "polydata saved" << endl;
 #endif
 }
