@@ -38,7 +38,8 @@ include(${VTK_USE_FILE})
 vtk_module_load (vtkIOXML)
 
 add_executable(convertUnstructured 
-	convertUnstructured.cxx)
+	convertUnstructured.cxx gen_zcurve_new.cpp)
+add_definitions(-std=c++0x)
 target_link_libraries (convertUnstructured
   vtkCommonCore
   vtkCommonDataModel

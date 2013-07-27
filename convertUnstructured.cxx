@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 
 #include <iostream>
 #include <vector>
@@ -14,6 +15,13 @@
 #include <vtkHexahedron.h>
 #include <vtkCellArray.h>
 #include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkDataArray.h>
+#include <vtkFloatArray.h>
+#include <vtkCellArray.h>
+#include <vtkCell.h>
+#include <vtkIdList.h>
+
+#include "zcurve.h"
 
 using namespace std;
 
@@ -59,23 +67,27 @@ convertSimple(vtkImageData *imageData)
 	int dim[3];
 	imageData->GetDimensions(dim);
 	cout << "resampled data width: " << dim[0] << "," << dim[1] << "," << dim[2] << endl;
+	int size = dim[0] * dim[1] * dim[2];
 
 	//
 	// assign all points
 	//
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+	points->SetNumberOfPoints(size);
 	int x,y,z;
+	int i=0;
 	for (z=0; z<dim[2]; z++)
 		for (y=0; y<dim[1]; y++)
 			for (x=0; x<dim[0]; x++)
 			{
-				float p[3];
+				double p[3];
 				p[0] = x; p[1] = y; p[2] = z;
-				points->InsertNextPoint(p);
+				points->SetPoint(i++, p);
 			}
 
 	vtkSmartPointer<vtkCellArray> hexs =
 	    vtkSmartPointer<vtkCellArray>::New();
+	//hexs->SetNumberOfCells((vtkIdType)size); <- size non-equal cause problem
 	for (z=0; z<dim[2]-1; z++)
 		for (y=0; y<dim[1]-1; y++)
 			for (x=0; x<dim[0]-1; x++)
@@ -97,9 +109,6 @@ convertSimple(vtkImageData *imageData)
 				hexs->InsertNextCell(hex);
 			}
 
-	vtkSmartPointer<vtkHexahedron> hex =
-	    vtkSmartPointer<vtkHexahedron>::New();
-
 	vtkSmartPointer<vtkUnstructuredGrid> uGrid =
 	    vtkSmartPointer<vtkUnstructuredGrid>::New();
 	uGrid->SetPoints(points);
@@ -107,6 +116,93 @@ convertSimple(vtkImageData *imageData)
 	uGrid->GetPointData()->AddArray( imageData->GetPointData()->GetScalars() );
 
 	return uGrid;
+}
+
+
+vtkSmartPointer<vtkUnstructuredGrid>
+reorder_zcurve( vtkSmartPointer<vtkUnstructuredGrid> inGrid, vtkSmartPointer<vtkImageData> image )
+{
+	vtkSmartPointer<vtkUnstructuredGrid> outGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+
+	int dim[4];
+	dim[3] = 1;
+	image->GetDimensions(dim);
+
+	cout << "Generating order" << endl;
+	vector<int> mappingID;
+	gen_zcurve(dim, mappingID);
+	int size = mappingID.size();
+	printf("%d %d %d %d , size=%d\n", dim[0], dim[1], dim[2], dim[3], size);
+
+	int dim1[4];
+	dim1[0] = dim[0] -1;
+	dim1[1] = dim[1] -1;
+	dim1[2] = dim[2] -1;
+	dim1[3] = 1;
+	vector<int> mappingID1;
+	gen_zcurve(dim1, mappingID1);
+	int size1 = mappingID1.size();
+
+
+	//
+	// start reordering points
+	//
+	cout << "reordering points" << endl;
+
+	vtkSmartPointer<vtkPoints> inPoints = inGrid->GetPoints();
+	vtkSmartPointer<vtkPoints> outPoints = vtkSmartPointer<vtkPoints>::New();
+	int i;
+	assert(inPoints->GetNumberOfPoints() == size);
+	outPoints->SetNumberOfPoints(size);
+	for (i=0; i<size; i++)
+	{
+		double *p = inPoints->GetPoint(mappingID[i]);
+		outPoints->SetPoint(i, p);
+		assert(mappingID[i] < size);
+		//printf("Point: %lf %lf %lf\n", p[0], p[1], p[2]);
+	}
+	outGrid->SetPoints(outPoints);
+
+	cout << "reordering field" << endl;
+	vtkFloatArray *inField = vtkFloatArray::SafeDownCast( inGrid->GetPointData()->GetArray(0) );
+	vtkSmartPointer<vtkFloatArray> outField = vtkSmartPointer<vtkFloatArray>::New();
+	outField->SetName( inField->GetName() );
+	//outField->SetNumberOfValues(size);
+	assert(inField->GetNumberOfValues() == size);
+	for (i=0; i<size; i++)
+	{
+		outField->InsertNextValue(inField->GetValue(mappingID[i]));
+		assert(inField->GetValue(mappingID[i]) < size);
+		//printf("outField: inField(%d)=%d\n", mappingID[i], inField->GetValue(mappingID[i]));
+	}
+	//inField->Delete();
+	outGrid->GetPointData()->AddArray( outField );
+
+
+	cout << "set and reassign cells" << endl;
+	vector<int> mappingPos(size);
+	for (i=0; i<size; i++)
+		mappingPos[ mappingID[i] ] = i;
+	vtkSmartPointer<vtkCellArray> outHexs =
+			vtkSmartPointer<vtkCellArray>::New();
+	assert(inHexs->GetNumberOfCells() == size1);
+	//outHexs->SetNumberOfCells(size1);
+	for (i=0; i<size1; i++)
+	{
+		vtkSmartPointer<vtkHexahedron> outHex = vtkHexahedron::New();
+		vtkSmartPointer<vtkHexahedron> inHex = vtkHexahedron::SafeDownCast( inGrid->GetCell( mappingID1[i] ) );
+		for (int j=0; j<8; j++)
+		{
+			outHex->GetPointIds()->SetId( j, mappingPos[ inHex->GetPointId(j) ] );
+			//printf("SetId[%d]=mapping[inHex(%d)]\n", j, inHex->GetPointId(j));
+			assert (inHex->GetPointId(j) < size);
+		}
+		outHexs->InsertNextCell(outHex);
+		//hex->Delete();
+	}
+	outGrid->SetCells(VTK_HEXAHEDRON, outHexs);
+
+	return outGrid;
 }
 
 void writeData(vtkSmartPointer<vtkUnstructuredGrid> uGrid, string str)
@@ -122,19 +218,33 @@ void writeData(vtkSmartPointer<vtkUnstructuredGrid> uGrid, string str)
 
 int main(int argc, const char **argv)
 {
-	if (argc<2) {
-		cout << "Usage: convertUnstructured filename resample_ratio" << endl;
+	if (argc==1) {
+		cout << "Usage: convertUnstructured filename resample_ratio zcurve=1" << endl;
 		exit(0);
 	}
 	const char *filename = argv[1];
-	float ratio = atof(argv[2]);
+	float ratio = 1.f;
+	if (argc>2) ratio = atof(argv[2]);
+	bool use_zcurve = false;
+	if (argc>3) use_zcurve = atoi(argv[3]);
+
 	vtkSmartPointer<vtkImageData> imageData = readData(filename, ratio);
 
 	vtkSmartPointer<vtkUnstructuredGrid> uGrid = convertSimple(imageData);
 
-	char s[100];
-	sprintf(s, "%s_r%g.vtu", filename, ratio );
-	writeData(uGrid, s);
+	if (use_zcurve) {
+		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder_zcurve(uGrid, imageData);
+
+		char s[100];
+		sprintf(s, "%s_r%gz.vtu", filename, ratio );
+		writeData(uGridr, s);
+	} else
+	{
+		char s[100];
+		sprintf(s, "%s_r%g.vtu", filename, ratio);
+		writeData(uGrid, s);
+	}
+
 
 	return 0;
 }
