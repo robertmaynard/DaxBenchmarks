@@ -96,7 +96,7 @@ convertSimple(vtkImageData *imageData)
 				// (the two faces must be in counter clockwise order as viewd from the outside)
 				vtkSmartPointer<vtkHexahedron> hex =
 				    vtkSmartPointer<vtkHexahedron>::New();
-#define GET_ID(x,y,z) ( (x) + dim[0]*( (y) + dim[1]*(z) ))
+				#define GET_ID(x,y,z) ( (x) + dim[0]*( (y) + dim[1]*(z) ))
 				hex->GetPointIds()->SetId(0,GET_ID(x  , y  , z));
 				hex->GetPointIds()->SetId(1,GET_ID(x+1, y  , z));
 				hex->GetPointIds()->SetId(2,GET_ID(x+1, y+1, z));
@@ -105,7 +105,7 @@ convertSimple(vtkImageData *imageData)
 				hex->GetPointIds()->SetId(5,GET_ID(x+1, y  , z+1));
 				hex->GetPointIds()->SetId(6,GET_ID(x+1, y+1, z+1));
 				hex->GetPointIds()->SetId(7,GET_ID(x  , y+1, z+1));
-#undef GET_ID
+				#undef GET_ID
 				hexs->InsertNextCell(hex);
 			}
 
@@ -119,30 +119,61 @@ convertSimple(vtkImageData *imageData)
 }
 
 
-vtkSmartPointer<vtkUnstructuredGrid>
-reorder_zcurve( vtkSmartPointer<vtkUnstructuredGrid> inGrid, vtkSmartPointer<vtkImageData> image )
+void gen_order_zcurve(vtkSmartPointer<vtkImageData> image,
+		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/)
 {
-	vtkSmartPointer<vtkUnstructuredGrid> outGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
 	int dim[4];
 	dim[3] = 1;
 	image->GetDimensions(dim);
 
 	cout << "Generating order" << endl;
-	vector<int> mappingID;
 	gen_zcurve(dim, mappingID);
-	int size = mappingID.size();
-	printf("%d %d %d %d , size=%d\n", dim[0], dim[1], dim[2], dim[3], size);
+	//printf("%d %d %d %d , size=%d\n", dim[0], dim[1], dim[2], dim[3], size);
 
 	int dim1[4];
 	dim1[0] = dim[0] -1;
 	dim1[1] = dim[1] -1;
 	dim1[2] = dim[2] -1;
 	dim1[3] = 1;
-	vector<int> mappingID1;
 	gen_zcurve(dim1, mappingID1);
-	int size1 = mappingID1.size();
+}
 
+void gen_order_reverse_scanline(vtkSmartPointer<vtkImageData> image,
+		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/)
+{
+	int dim[4];
+	dim[3] = 1;
+	image->GetDimensions(dim);
+
+	cout << "Generating order" << endl;
+	mappingID.clear();
+	mappingID.reserve(dim[0]*dim[1]*dim[2]);
+	int x,y,z;
+	for (x=0; x<dim[0]; x++)
+		for (y=0; y<dim[1]; y++)
+			for (z=0; z<dim[2]; z++)
+				mappingID.push_back(( (x) + dim[0]*( (y) + dim[1]*(z) )));
+
+	int dim1[4];
+	dim1[0] = dim[0] -1;
+	dim1[1] = dim[1] -1;
+	dim1[2] = dim[2] -1;
+	dim1[3] = 1;
+	for (x=0; x<dim1[0]; x++)
+		for (y=0; y<dim1[1]; y++)
+			for (z=0; z<dim1[2]; z++)
+				mappingID1.push_back(( (x) + dim1[0]*( (y) + dim1[1]*(z) )));
+
+}
+
+vtkSmartPointer<vtkUnstructuredGrid>
+reorder( vtkSmartPointer<vtkUnstructuredGrid> inGrid,
+		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/)
+{
+	vtkSmartPointer<vtkUnstructuredGrid> outGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+	int size = mappingID.size();
+	int size1 = mappingID1.size();
 
 	//
 	// start reordering points
@@ -190,12 +221,13 @@ reorder_zcurve( vtkSmartPointer<vtkUnstructuredGrid> inGrid, vtkSmartPointer<vtk
 	for (i=0; i<size1; i++)
 	{
 		//vtkSmartPointer<vtkHexahedron> outHex = vtkHexahedron::New();
-		vtkSmartPointer<vtkHexahedron> hex = vtkHexahedron::SafeDownCast( inGrid->GetCell( mappingID1[i] ) );
+		vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+		hex->DeepCopy( vtkHexahedron::SafeDownCast( inGrid->GetCell( mappingID1[i] ) )); // changes original data
 		for (int j=0; j<8; j++)
 		{
 			hex->GetPointIds()->SetId( j, mappingPos[ hex->GetPointId(j) ] );
 			//printf("SetId[%d]=mapping[inHex(%d)]\n", j, inHex->GetPointId(j));
-			assert (inHex->GetPointId(j) < size);
+			assert (hex->GetPointId(j) < size);
 		}
 		outHexs->InsertNextCell(hex);
 		//hex->Delete();
@@ -225,8 +257,10 @@ int main(int argc, const char **argv)
 	const char *filename = argv[1];
 	float ratio = 1.f;
 	if (argc>2) ratio = atof(argv[2]);
-	bool use_zcurve = false;
-	if (argc>3) use_zcurve = atoi(argv[3]);
+	bool gen_zcurve = false;
+	if (argc>3) gen_zcurve = atoi(argv[3]);
+	bool gen_reverse = false;
+	if (argc>4) gen_reverse = atoi(argv[4]);
 
 	vtkSmartPointer<vtkImageData> imageData = readData(filename, ratio);
 
@@ -236,10 +270,20 @@ int main(int argc, const char **argv)
 	sprintf(s, "%s_r%g.vtu", filename, ratio);
 	writeData(uGrid, s);
 
-	if (use_zcurve) {
-		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder_zcurve(uGrid, imageData);
+	if (gen_reverse) {
+		vector<int> mappingID, mappingID1;
+		gen_order_reverse_scanline(imageData, mappingID, mappingID1);
+		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder(uGrid, mappingID, mappingID1);
 
-		char s[100];
+		sprintf(s, "%s_r%gr.vtu", filename, ratio);
+		writeData(uGrid, s);
+	}
+
+	if (gen_zcurve) {
+		vector<int> mappingID, mappingID1;
+		gen_order_zcurve(imageData, mappingID, mappingID1);
+		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder(uGrid, mappingID, mappingID1);
+
 		sprintf(s, "%s_r%gz.vtu", filename, ratio );
 		writeData(uGridr, s);
 	}
