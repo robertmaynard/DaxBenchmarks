@@ -12,6 +12,8 @@
 
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLUnstructuredGridReader.h>
+#include <vtkXMLPolyDataWriter.h>
+#include <vtkNew.h>
 
 #include <iostream>
 #include <vector>
@@ -73,6 +75,17 @@ ReadData_uGrid(std::string file)
   //std::cout << uGrid->GetPointData() << std::endl;
 
   return uGrid;
+}
+
+
+void WriteData(vtkSmartPointer<vtkPolyData> uGrid, std::string str)
+{
+	cout << "Writing file " << str << endl;
+	// Write file
+	vtkNew<vtkXMLPolyDataWriter> writer;
+	writer->SetFileName(str.c_str());
+	writer->SetInputData(uGrid);
+	writer->Write();
 }
 
 
@@ -151,7 +164,9 @@ int RunComparison(std::string device, std::string file, int pipeline, double res
       }
 
     // debug result
-    genVTKDaxMarchingCubes(image);
+    vtkNew<vtkPolyData> polyData;
+    RunDaxMarchingCubes(image, device, 1, true, true, polyData.GetPointer());
+    WriteData(polyData.GetPointer(), "out.vtp");
 
   }
 

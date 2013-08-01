@@ -40,6 +40,8 @@
 #include <vtkXMLPolyDataWriter.h> // debug
 #include <daxToVtk/DataSetConverters.h>
 #include <daxToVtk/CellTypeToType.h>
+#include <vtkToDax/DataSetConverters.h>
+#include <vtkToDax/Containers.h>
 
 #include <vector>
 #include <string.h>
@@ -208,7 +210,8 @@ template<typename CellTypeToTypeDef> struct DataSetTypeToType<CellTypeToTypeDef,
 static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
                                 std::string device, int MAX_NUM_TRIALS,
                                 bool enablePointResolution,
-                                bool silent=false)
+                                bool silent=false,
+                                vtkPolyData *vtkPolyOut = NULL)
 {
 	//
 	// convert data to dax
@@ -262,7 +265,9 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 		generate.SetRemoveDuplicatePoints(enablePointResolution);
 
 		//run the second step
-		dax::cont::UnstructuredGrid<dax::CellTagTriangle> outGrid;
+		dax::cont::UnstructuredGrid<dax::CellTagTriangle,
+			vtkToDax::vtkTopologyContainerTag< vtkToDax::CellTypeToType<vtkTriangle>  >,
+			vtkToDax::vtkPointsContainerTag > outGrid;
 
 		//schedule marching cubes worklet generate step, saving
 		scheduler.Invoke(generate, topology, outGrid, field);
@@ -284,6 +289,13 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 				SharedStatus::getInstance()->dax_mc_res_time.push_back(time);
 			else
 				SharedStatus::getInstance()->dax_mc_nores_time.push_back(time);
+		}
+
+		// covert the mesh into vtk format for debugging
+		std::cout << vtkPolyOut << endl;
+		if (vtkPolyOut) {
+			daxToVtk::dataSetConverter(outGrid, vtkPolyOut);
+			std::cout << "vtkPoly Points: " << vtkPolyOut->GetNumberOfPoints() << ", polys: " << vtkPolyOut->GetNumberOfPolys() << std::endl;
 		}
 
     }

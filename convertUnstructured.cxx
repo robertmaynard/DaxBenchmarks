@@ -1,8 +1,9 @@
-#include <stdlib.h>
-#include <assert.h>
-
+#include <algorithm>
 #include <iostream>
 #include <vector>
+
+#include <stdlib.h>
+#include <assert.h>
 
 #include <vtkNew.h>
 #include <vtkDataArray.h>
@@ -167,6 +168,34 @@ void gen_order_reverse_scanline(vtkSmartPointer<vtkImageData> image,
 
 }
 
+void gen_order_shuffle(vtkSmartPointer<vtkImageData> image,
+		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/)
+{
+	int dim[3];
+	image->GetDimensions(dim);
+	int size = dim[0] * dim[1] * dim[2];
+
+	cout << "Generating random order" << endl;
+	mappingID.clear();
+	mappingID.reserve(size);
+
+	int i;
+	for (i=0; i<size; i++ )
+		mappingID.push_back(i);
+	std::random_shuffle(mappingID.begin(), mappingID.end());
+
+	int dim1[3];
+	dim1[0] = dim[0] -1;
+	dim1[1] = dim[1] -1;
+	dim1[2] = dim[2] -1;
+	int size1 = dim1[0]*dim1[1]*dim1[2];
+	mappingID1.clear();
+	mappingID1.reserve(size1);
+	for (i=0; i<size1; i++)
+		mappingID1.push_back(i);
+	std::random_shuffle(mappingID1.begin(), mappingID1.end());
+}
+
 vtkSmartPointer<vtkUnstructuredGrid>
 reorder( vtkSmartPointer<vtkUnstructuredGrid> inGrid,
 		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/)
@@ -194,6 +223,8 @@ reorder( vtkSmartPointer<vtkUnstructuredGrid> inGrid,
 	}
 	outGrid->SetPoints(outPoints);
 
+
+#if 1
 	cout << "reordering field" << endl;
 	vtkFloatArray *inField = vtkFloatArray::SafeDownCast( inGrid->GetPointData()->GetArray(0) );
 	vtkSmartPointer<vtkFloatArray> outField = vtkSmartPointer<vtkFloatArray>::New();
@@ -206,8 +237,20 @@ reorder( vtkSmartPointer<vtkUnstructuredGrid> inGrid,
 		assert(inField->GetValue(mappingID[i]) < size);
 		//printf("outField: inField(%d)=%d\n", mappingID[i], inField->GetValue(mappingID[i]));
 	}
-	//inField->Delete();
 	outGrid->GetPointData()->AddArray( outField );
+#else // use value to debug the reordered position
+
+	cout << "creating debug field" << endl;
+	vtkSmartPointer<vtkFloatArray> outField = vtkSmartPointer<vtkFloatArray>::New();
+	outField->SetName( inGrid->GetPointData()->GetArray(0)->GetName() );
+	for (i=0; i<size; i++)
+	{
+		outField->InsertNextValue(i);
+		//printf("outField: inField(%d)=%d\n", mappingID[i], inField->GetValue(mappingID[i]));
+	}
+	outGrid->GetPointData()->AddArray( outField );
+
+#endif
 
 
 	cout << "set and reassign cells" << endl;
@@ -250,10 +293,7 @@ void writeData(vtkSmartPointer<vtkUnstructuredGrid> uGrid, string str)
 
 int main(int argc, const char **argv)
 {
-	if (argc==1) {
-		cout << "Usage: convertUnstructured filename resample_ratio zcurve=1" << endl;
-		exit(0);
-	}
+	cout << "Usage: convertUnstructured filename [resample_ratio gen_zcurve? gen_reverse? gen_shuffle?]" << endl;
 	const char *filename = argv[1];
 	float ratio = 1.f;
 	if (argc>2) ratio = atof(argv[2]);
@@ -261,6 +301,8 @@ int main(int argc, const char **argv)
 	if (argc>3) gen_zcurve = atoi(argv[3]);
 	bool gen_reverse = false;
 	if (argc>4) gen_reverse = atoi(argv[4]);
+	bool gen_shuffle = false;
+	if (argc>5) gen_shuffle = atoi(argv[5]);
 
 	vtkSmartPointer<vtkImageData> imageData = readData(filename, ratio);
 
@@ -276,16 +318,25 @@ int main(int argc, const char **argv)
 		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder(uGrid, mappingID, mappingID1);
 
 		sprintf(s, "%s_r%gr.vtu", filename, ratio);
-		writeData(uGrid, s);
+		writeData(uGridr, s);
 	}
 
 	if (gen_zcurve) {
 		vector<int> mappingID, mappingID1;
 		gen_order_zcurve(imageData, mappingID, mappingID1);
-		vtkSmartPointer<vtkUnstructuredGrid> uGridr = reorder(uGrid, mappingID, mappingID1);
+		vtkSmartPointer<vtkUnstructuredGrid> uGridz = reorder(uGrid, mappingID, mappingID1);
 
 		sprintf(s, "%s_r%gz.vtu", filename, ratio );
-		writeData(uGridr, s);
+		writeData(uGridz, s);
+	}
+
+	if (gen_shuffle) {
+		vector<int> mappingID, mappingID1;
+		gen_order_shuffle(imageData, mappingID, mappingID1);
+		vtkSmartPointer<vtkUnstructuredGrid> uGrids = reorder(uGrid, mappingID, mappingID1);
+
+		sprintf(s, "%s_r%gs.vtu", filename, ratio );
+		writeData(uGrids, s);
 	}
 
 	return 0;
