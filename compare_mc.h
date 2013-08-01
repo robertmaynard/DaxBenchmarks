@@ -292,7 +292,6 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 		}
 
 		// covert the mesh into vtk format for debugging
-		std::cout << vtkPolyOut << endl;
 		if (vtkPolyOut) {
 			daxToVtk::dataSetConverter(outGrid, vtkPolyOut);
 			std::cout << "vtkPoly Points: " << vtkPolyOut->GetNumberOfPoints() << ", polys: " << vtkPolyOut->GetNumberOfPolys() << std::endl;
