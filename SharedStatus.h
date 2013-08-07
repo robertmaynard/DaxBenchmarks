@@ -12,7 +12,10 @@ public:
 	std::vector<double> norm_reqInfo_reqUpdate_time, norm_reqUpdate_reqData_time,
 		vtkdax_norm_time, vtkdax_mc_time, vtkdax_total_time,
 		dax_mc_nores_time, dax_mc_res_time,
-		vtk_mc_time;
+		vtk_mc_time,
+		dax_mc_classify_time,
+		dax_mc_genIC_res_time, dax_mc_genIC_nores_time,
+		dax_norm_res_time, dax_norm_nores_time;
 	std::vector<double> norm_copyPointsToDev_time, norm_copyCellsToDev_time, norm_copyToMem_time;
 
 	void print() ;

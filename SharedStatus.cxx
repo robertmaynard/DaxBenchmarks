@@ -21,4 +21,11 @@ void SharedStatus::print()
 			average(norm_copyPointsToDev_time), average(norm_copyCellsToDev_time));
 	printf("Average dev->host time: %lf\n", average(norm_copyToMem_time));
 
+	// new for reorder
+	printf("Average dax mc classify time: %lf\n", average(dax_mc_classify_time));
+	printf("Average dax mc gen interp. cells time with resolution: %lf\n", average(dax_mc_genIC_res_time));
+	printf("Average dax mc gen interp. cells time without resolution: %lf\n", average(dax_mc_genIC_nores_time));
+	printf("Average dax normalize time with resolution: %lf\n", average(dax_norm_res_time));
+	printf("Average dax normalize time without resolution: %lf\n", average(dax_norm_nores_time));
+
 }

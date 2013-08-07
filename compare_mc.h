@@ -245,6 +245,7 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
   for(int i=0; i < MAX_NUM_TRIALS; ++i)
     {
 		dax::cont::Timer<> timer;
+		double time;
 		char s[100];
 		sprintf(s, "Dax round %d, enablePointResolution=%d", i, enablePointResolution);
 		tlog->startEvent(evt_id, s);
@@ -258,11 +259,23 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 
 		//run the first step
 		ClassifyResultType classification; //array handle for the first step classification
-		scheduler.Invoke(classifyWorklet, topology, field, classification);
+		timer.Reset();
+		{
+			scheduler.Invoke(classifyWorklet, topology, field, classification);
+		}
+		SharedStatus::getInstance()->dax_mc_classify_time.push_back( timer.GetElapsedTime() );
 
 		//construct the topology generation worklet
 		GenerateIC generate(classification,generateWorklet);
-		generate.SetRemoveDuplicatePoints(enablePointResolution);
+		timer.Reset();
+		{
+			generate.SetRemoveDuplicatePoints(enablePointResolution);
+		}
+		time = timer.GetElapsedTime();
+		if (enablePointResolution)
+			SharedStatus::getInstance()->dax_mc_genIC_res_time.push_back(time);
+		else
+			SharedStatus::getInstance()->dax_mc_genIC_nores_time.push_back(time);
 
 		//run the second step
 		dax::cont::UnstructuredGrid<dax::CellTagTriangle,
@@ -273,11 +286,19 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 		scheduler.Invoke(generate, topology, outGrid, field);
 
 		//compute the normals of each output triangle
-
 		dax::cont::ArrayHandle<dax::Vector3> normals;
-		scheduler.Invoke(normWorklet, outGrid, outGrid.GetPointCoordinates(), normals);
+		timer.Reset();
+		{
+			scheduler.Invoke(normWorklet, outGrid, outGrid.GetPointCoordinates(), normals);
+		}
+		time = timer.GetElapsedTime();
+		if (enablePointResolution)
+			SharedStatus::getInstance()->dax_norm_res_time.push_back(time);
+		else
+			SharedStatus::getInstance()->dax_norm_nores_time.push_back(time);
 
-		double time = timer.GetElapsedTime();
+
+		time = timer.GetElapsedTime();
 		tlog->endEvent(evt_id);
 
 		//if(!silent)

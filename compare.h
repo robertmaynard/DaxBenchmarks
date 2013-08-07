@@ -140,7 +140,7 @@ int RunComparison(std::string device, std::string file, int pipeline, double res
     std::cout << "Warming up the machine" << std::endl;
     //warm up the card, whatever algorithm we run first will get a performance
     //hit for the first 10 iterations if we don't run something first
-    RunDaxMarchingCubes(image,device,NUM_TRIALS,WithPointResolution,false);
+    RunDaxMarchingCubes(image,device,NUM_TRIALS,WithPointResolution,true);
 
     std::cout << "Benchmarking Marching Cubes" << std::endl;
 
