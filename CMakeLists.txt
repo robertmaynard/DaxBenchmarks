@@ -26,7 +26,7 @@ find_package(VTK 6.1
   REQUIRED)
 
 DaxConfigureSerial(REQUIRED)
-#DaxConfigureTBB(REQUIRED)
+DaxConfigureTBB(REQUIRED)
 DaxConfigureCuda()
 
 include(${VTK_USE_FILE})
@@ -67,7 +67,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 
-if (false)
+if (true)
 add_executable(BenchmarkSerial
   ${srcs}
   mainSerial.cxx
