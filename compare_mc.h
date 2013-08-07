@@ -267,15 +267,7 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 
 		//construct the topology generation worklet
 		GenerateIC generate(classification,generateWorklet);
-		timer.Reset();
-		{
-			generate.SetRemoveDuplicatePoints(enablePointResolution);
-		}
-		time = timer.GetElapsedTime();
-		if (enablePointResolution)
-			SharedStatus::getInstance()->dax_mc_genIC_res_time.push_back(time);
-		else
-			SharedStatus::getInstance()->dax_mc_genIC_nores_time.push_back(time);
+		generate.SetRemoveDuplicatePoints(enablePointResolution);
 
 		//run the second step
 		dax::cont::UnstructuredGrid<dax::CellTagTriangle,
@@ -283,7 +275,15 @@ static void RunDaxMarchingCubes(vtkUnstructuredGrid *data,
 			vtkToDax::vtkPointsContainerTag > outGrid;
 
 		//schedule marching cubes worklet generate step, saving
+		timer.Reset();
+		{
 		scheduler.Invoke(generate, topology, outGrid, field);
+		}
+		time = timer.GetElapsedTime();
+		if (enablePointResolution)
+			SharedStatus::getInstance()->dax_mc_genIC_res_time.push_back(time);
+		else
+			SharedStatus::getInstance()->dax_mc_genIC_nores_time.push_back(time);
 
 		//compute the normals of each output triangle
 		dax::cont::ArrayHandle<dax::Vector3> normals;
