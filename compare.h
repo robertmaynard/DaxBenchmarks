@@ -55,7 +55,7 @@ int RunComparison(std::string device, std::string file, int pipeline)
 {
 
   std::vector<dax::Scalar> buffer;
-  double resample_ratio = 1; //full data
+  double resample_ratio = 0.5; //full data
   vtkSmartPointer< vtkImageData > image = ReadData(buffer, file, resample_ratio);
 
   //get dims of image data

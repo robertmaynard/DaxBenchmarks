@@ -3,13 +3,15 @@
 #include <dax/CellTraits.h>
 
 #include <dax/cont/ArrayHandle.h>
-#include <dax/cont/GenerateInterpolatedCells.h>
+#include <dax/cont/GenerateKeysValues.h>
+#include <dax/cont/ReduceKeysValues.h>
+#include <dax/cont/GenerateTopology.h>
 #include <dax/cont/Scheduler.h>
 #include <dax/cont/Timer.h>
 #include <dax/exec/CellField.h>
 #include <dax/math/Trig.h>
 #include <dax/math/VectorAnalysis.h>
-#include <dax/worklet/MarchingCubes.h>
+#include <dax/worklet/MarchingCubesMapReduce.h>
 
 #include <vtkContourFilter.h>
 #include <vtkImageData.h>
@@ -57,13 +59,8 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
   dax::cont::UniformGrid<> grid;
   grid.SetExtent(dax::make_Id3(0, 0, 0), dax::make_Id3(dims[0]-1, dims[1]-1, dims[2]-1));
 
-  typedef dax::cont::GenerateInterpolatedCells<dax::worklet::MarchingCubesGenerate> GenerateIC;
-  typedef GenerateIC::ClassifyResultType  ClassifyResultType;
-
   //construct the scheduler that will execute all the worklets
   dax::cont::Scheduler<> scheduler;
-
-
   for(int i=0; i < MAX_NUM_TRIALS; ++i)
     {
     dax::cont::Timer<> timer;
@@ -73,26 +70,39 @@ static void RunDaxMarchingCubes(int dims[3], std::vector<dax::Scalar>& buffer,
     //construct the two worklets that will be used to do the marching cubes
     dax::worklet::MarchingCubesClassify classifyWorklet(ISO_VALUE);
     dax::worklet::MarchingCubesGenerate generateWorklet(ISO_VALUE);
+    dax::worklet::MarchingCubesInterpolate interpolateWorklet;
     dax::worklet::Normals normWorklet;
 
     //run the first step
-    ClassifyResultType classification; //array handle for the first step classification
+    dax::cont::ArrayHandle<dax::Id> classification;
     scheduler.Invoke(classifyWorklet, grid, field, classification);
 
-    //construct the topology generation worklet
-    GenerateIC generate(classification,generateWorklet);
-    generate.SetRemoveDuplicatePoints(enablePointResolution);
+    dax::cont::GenerateKeysValues< dax::worklet::MarchingCubesGenerate >
+          generateKeys( classification, generateWorklet );
 
-    //run the second step
-    dax::cont::UnstructuredGrid<dax::CellTagTriangle> outGrid;
+    dax::cont::ArrayHandle<dax::Id2> keyHandle;
+    dax::cont::ArrayHandle<dax::Scalar> valueHandle;
 
-    //schedule marching cubes worklet generate step, saving
-    scheduler.Invoke(generate, grid, outGrid, field);
+    dax::cont::ArrayHandle<dax::Scalar> newWeights;
+
+    //we now have generated key value pairs that represent
+    //the edge and weight
+    scheduler.Invoke(generateKeys, grid,
+                     field, keyHandle, valueHandle );
+
+    dax::cont::ReduceKeysValues< dax::worklet::MarchingCubesInterpolate,
+                                 dax::cont::ArrayHandle<dax::Id2> >
+                                  reduceKeys(keyHandle, interpolateWorklet);
+
+    scheduler.Invoke(reduceKeys, valueHandle, newWeights);
+
 
     //compute the normals of each output triangle
 
     dax::cont::ArrayHandle<dax::Vector3> normals;
-    scheduler.Invoke(normWorklet, outGrid, outGrid.GetPointCoordinates(), normals);
+    dax::cont::UnstructuredGrid<dax::CellTagTriangle> outGrid;
+
+    // scheduler.Invoke(normWorklet, outGrid, outGrid.GetPointCoordinates(), normals);
 
     double time = timer.GetElapsedTime();
     if(!silent)
