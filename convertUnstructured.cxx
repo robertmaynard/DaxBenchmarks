@@ -169,7 +169,8 @@ void gen_order_reverse_scanline(vtkSmartPointer<vtkImageData> image,
 }
 
 void gen_order_shuffle(vtkSmartPointer<vtkImageData> image,
-		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/)
+		vector<int> &mappingID /*Point*/, vector<int> &mappingID1 /*cell*/,
+		bool shuffle1=true, bool shuffle2=true)
 {
 	int dim[3];
 	image->GetDimensions(dim);
@@ -182,7 +183,8 @@ void gen_order_shuffle(vtkSmartPointer<vtkImageData> image,
 	int i;
 	for (i=0; i<size; i++ )
 		mappingID.push_back(i);
-	std::random_shuffle(mappingID.begin(), mappingID.end());
+	if (shuffle1)
+		std::random_shuffle(mappingID.begin(), mappingID.end());
 
 	int dim1[3];
 	dim1[0] = dim[0] -1;
@@ -193,7 +195,8 @@ void gen_order_shuffle(vtkSmartPointer<vtkImageData> image,
 	mappingID1.reserve(size1);
 	for (i=0; i<size1; i++)
 		mappingID1.push_back(i);
-	std::random_shuffle(mappingID1.begin(), mappingID1.end());
+	if (shuffle2)
+		std::random_shuffle(mappingID1.begin(), mappingID1.end());
 }
 
 vtkSmartPointer<vtkUnstructuredGrid>
@@ -336,6 +339,20 @@ int main(int argc, const char **argv)
 		vtkSmartPointer<vtkUnstructuredGrid> uGrids = reorder(uGrid, mappingID, mappingID1);
 
 		sprintf(s, "%s_r%gs.vtu", filename, ratio );
+		writeData(uGrids, s);
+
+		// shuffle points only
+		gen_order_shuffle(imageData, mappingID, mappingID1, true, false);
+		uGrids = reorder(uGrid, mappingID, mappingID1);
+
+		sprintf(s, "%s_r%gsp.vtu", filename, ratio );
+		writeData(uGrids, s);
+
+		// shuffle cells only
+		gen_order_shuffle(imageData, mappingID, mappingID1, false, true);
+		uGrids = reorder(uGrid, mappingID, mappingID1);
+
+		sprintf(s, "%s_r%gsc.vtu", filename, ratio );
 		writeData(uGrids, s);
 	}
 
