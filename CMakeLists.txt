@@ -84,6 +84,7 @@ if(Dax_TBB_FOUND)
 
   target_link_libraries(BenchmarkTBB
     ${DAX_TIMING_LIBS}
+    ${TBB_LIBRARIES}
     vtkCommonCore
     vtkCommonDataModel
     vtkCommonExecutionModel

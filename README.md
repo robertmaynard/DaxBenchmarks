@@ -9,7 +9,7 @@ The basic computational unit of the Dax Toolkit is a worklet, a function that im
 
 The worklet is constrained to be serial and stateless; it can access only the element passed to and from the invocation. With this constraint, the serial worklet function can be concurrently scheduled on an unlimited number of threads without the complications of threads or race conditions.
 
-Although worklets are not allowed communication, many visualization algorithms require operations such as variable array packing and coincident topology resolution that intrinsically require significant coordination among threads. Dax enables such algorithms by classifying and implementing the most common and versatile communicative operations into worklet types which are managed by the Dax scheduler.
+Although worklets are not allowed communication, many visualization algorithms require operations such as variable array packing and coincident topology resolution that intrinsically require significant coordination among threads. Dax enables such algorithms by classifying and implementing the most common and versatile communicative operations into worklet types which are managed by the Dax dispatcher.
 
 ## Getting Dax ##
 
@@ -54,15 +54,15 @@ For tbb you can also set cores to specify the number of threads to use.
 
 ## License ##
 
-Copyright (c) Kitware, Inc.  
-All rights reserved.  
-[See LICENSE.txt for details](LICENSE.txt).  
+Copyright (c) Kitware, Inc.
+All rights reserved.
+[See LICENSE.txt for details](LICENSE.txt).
 
-Copyright 2011 Sandia Corporation.  
-Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  
-the U.S. Government retains certain rights in this software.  
+Copyright 2011 Sandia Corporation.
+Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+the U.S. Government retains certain rights in this software.
 
-This software is distributed WITHOUT ANY WARRANTY; without even  
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-[See the copyright file for more information](LICENSE.txt).  
+This software is distributed WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+[See the copyright file for more information](LICENSE.txt).
 
