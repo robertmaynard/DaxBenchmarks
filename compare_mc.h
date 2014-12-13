@@ -30,8 +30,7 @@ namespace dax { namespace worklet {
 
 struct Normals: public dax::exec::WorkletMapCell
 {
-typedef void ControlSignature(Topology, Field(In,Point),
-                  Field(Out));
+typedef void ControlSignature(TopologyIn, FieldPointIn, FieldOut);
 typedef _3 ExecutionSignature(_2);
 
 DAX_EXEC_EXPORT
